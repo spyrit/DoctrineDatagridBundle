@@ -1,0 +1,7 @@
+datagrid_list:
+    pattern: /datagrid/demo/book/list/{action}/{datagrid}/{param1}/{param2}
+    defaults: { _controller: DoctrineDatagridBundle:Demo:list, action: null, datagrid: null, param1: null, param2: null }
+    
+datagrid_export:
+    pattern: /datagrid/demo/book/export/{name}
+    defaults: { _controller: DoctrineDatagridBundle:Demo:export }

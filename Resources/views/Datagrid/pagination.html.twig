@@ -1,0 +1,44 @@
+{% spaceless %}
+{% set extraParameters = extraParameters|default({}) %}
+{% set display = display|default(2) %}
+{% set page = datagrid.currentPage %}
+{% set pages = datagrid.nbPages %}
+
+{% if pages > 1 %}
+{% set available = ['1'] %}
+{% set i = page - display %}
+{% set min = page - display %}
+{% set max = page + display %}
+{% for min in i..max %}
+    {% if(min > 1 and min < pages) %}
+        {% set available = available|merge([min]) %}
+    {% endif %}
+    {% set min = min + 1 %}
+{% endfor %}
+
+{% set available = available|merge([pages]) %}
+
+<ul class="pagination">
+    {% set next = available[0] %}
+    {% set i = 0 %}
+    {% for currentPage in available %}
+        {% if(next != currentPage) %}
+            <li>
+                <a onclick="return false;" href="#">...</a>
+            </li>
+            {% if(available[i+1] is defined) %}{% set next = available[i+1] %}{% endif %}
+        {% else %} 
+            {% set next = next + 1 %} 
+        {% endif %}
+        <li class="{% if(currentPage == page) %}active{% endif %}">
+            <a href="{{ datagrid.getPaginationPath(route, currentPage, extraParameters) }}"
+               title="Page {{ currentPage }}"
+               class="{% if(currentPage == page) %}active{% endif %}">
+                {{ currentPage }}
+            </a>
+        </li>
+        {% set i = i + 1 %}
+    {% endfor %}
+</ul>
+{% endif %}
+{% endspaceless %}

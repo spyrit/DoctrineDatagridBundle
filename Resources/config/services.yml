@@ -1,0 +1,4 @@
+services:
+    doctrine.datagrid.factory:
+        class:     Spyrit\Bundle\DoctrineDatagridBundle\Datagrid\DoctrineDatagridFactory
+        arguments: ["@service_container"]
