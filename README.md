@@ -1,4 +1,4 @@
-PropelDatagridBundle
+DoctrineDatagridBundle
 ==============
 
 This bundle helps you to create and manage simple to complex datagrids quickly and easily. 
