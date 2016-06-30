@@ -1,8 +1,8 @@
 {
-    "name": "spyrit/propel-datagrid-bundle",
-    "description": "Symfony2 Datagrid Bundle for Propel.",
-    "keywords": ["datagrid", "symfony", "propel"],
-    "homepage": "https://github.com/spyrit/DatagridBundle.git",
+    "name": "spyrit/doctrine-datagrid-bundle",
+    "description": "Symfony Datagrid Bundle for Doctrine.",
+    "keywords": ["datagrid", "symfony", "doctrine"],
+    "homepage": "https://github.com/spyrit/DoctrineDatagridBundle.git",
     "type": "symfony-bundle",
     "license": "MIT",
     "authors": [
@@ -21,16 +21,15 @@
         "email": "support@spyrit.net"
     },
     "require": {
-        "php": ">=5.3.3",
+        "php": ">=5.4",
         "symfony/symfony": ">=2.3",
-        "propel/propel-bundle": ">=1.2",
         "csanquer/colibri-csv": "1.2.*"
     },
     "require-dev": {
         "phpunit/phpunit": "4.2.*"
     },
     "autoload": {
-        "psr-0": { "Spyrit\\PropelDatagridBundle": "" }
+        "psr-0": { "Spyrit\\DoctrineDatagridBundle": "" }
     },
-    "target-dir": "Spyrit/PropelDatagridBundle"
+    "target-dir": "Spyrit/DoctrineDatagridBundle"
 }
