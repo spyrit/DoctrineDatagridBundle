@@ -29,7 +29,6 @@
         "phpunit/phpunit": "4.2.*"
     },
     "autoload": {
-	"psr-0": { "Spyrit\\Bundle\\DoctrineDatagridBundle": "" }
-    },
-    "target-dir": "Spyrit/DoctrineDatagridBundle"
+	"psr-4": { "Spyrit\\Bundle\\DoctrineDatagridBundle\\": "" }
+    }
 }
