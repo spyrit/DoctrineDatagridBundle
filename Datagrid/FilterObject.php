@@ -2,8 +2,9 @@
 
 namespace Spyrit\Bundle\DoctrineDatagridBundle\Datagrid;
 
-//use Symfony\Component\Form\Extension\Core\Type\FormType;
+use Symfony\Component\Form\Extension\Core\Type\FormType;
 use Symfony\Component\Form\FormFactory;
+use Symfony\Component\HttpKernel\Kernel;
 
 /**
  * @author Maxime CORSON <maxime.corson@spyrit.net>
@@ -22,7 +23,13 @@ class FilterObject
     
     public function __construct(FormFactory $factory, $name, $options = array('csrf_protection' => false))
     {
-        $this->builder = $factory->createNamedBuilder('filter_'.$name, 'form', null, $options);
+        $version = Kernel::VERSION;
+        switch(substr($version, 0, 1))
+        {
+            case '2': $type = 'form'; break;
+            default: $type = FormType::class;
+        }
+        $this->builder = $factory->createNamedBuilder('filter_'.$name, $type, null, $options);
     }
     
     public function add($name, $type, $options = array(), $value = null)
