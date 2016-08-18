@@ -53,3 +53,31 @@
         {% endspaceless %}"></i>
     </div>
 {% endmacro %}
+    
+{% macro batchHeader(datagrid, checkableGlobally) %}
+    <input type="checkbox" class="batch-all" 
+        {% if checkableGlobally is defined and checkableGlobally %}
+        data-toggle="popover" 
+        data-trigger="manual" 
+        data-placement="bottom"
+        data-html="true"
+        data-content="<i class='close fa fa-times-circle'></i>Les {{ datagrid.pager.results|length }} enregistrements de cette page sont sélectionnés. <a href='#' class='batch-all-globally'>Sélectionner les {{ datagrid.results|length }} enregistrements de la recherche.</a>"
+        {% endif %}
+        {% if datagrid.hasAllCheckedBatch %}
+            checked="checked"
+        {% endif %}
+    />
+{% endmacro %}
+    
+{% macro batch(identifier, datagrid) %}
+    <input type="checkbox" 
+        name="{{ datagrid.name }}[batch][{{ identifier }}]" 
+        id="{{ datagrid.name }}_{{ identifier }}" 
+        class="batch-one" 
+        value="{{ identifier }}" 
+        {% if datagrid.isBatchChecked(identifier) %}
+            checked="checked"
+        {% else %}
+        {% endif %}
+    />
+{% endmacro %}

@@ -44,13 +44,19 @@ class DoctrineDatagrid
      *
      * @var array 
      */
-    protected $filters = array();
+    protected $filters = [];
     
     /**
      *
      * @var array 
      */
-    protected $sorts = array();
+    protected $sorts = [];
+    
+    /**
+     *
+     * @var array 
+     */
+    protected $defaultSorts = [];
     
     /**
      * Results of the query (in fact this is a PropelPager object which contains
@@ -64,6 +70,12 @@ class DoctrineDatagrid
      * @var integer 
      */
     protected $maxPerPage;
+    
+    /**
+     * Default number of result(s) to display per page 
+     * @var integer 
+     */
+    protected $defaultMaxPerPage = 30;
     
     /**
      *
@@ -100,6 +112,13 @@ class DoctrineDatagrid
      * @var type 
      */
     protected $exports;
+    
+    /**
+     * The manager name used for queries.
+     * Null is the perfect value if only one manager is used.
+     * @var string 
+     */
+    protected $managerName = null;
 
     public function __construct($container, $name)
     {
@@ -114,13 +133,9 @@ class DoctrineDatagrid
     
     public function execute()
     {
-        //var_dump($_SESSION['_sf2_attributes']);
         $this->check();
-        //var_dump($_SESSION['_sf2_attributes']);
         $this->buildForm();
-        //var_dump($_SESSION['_sf2_attributes']);
         $this->controller();
-        //var_dump($_SESSION['_sf2_attributes']);
         return $this;
     }
     
@@ -155,6 +170,18 @@ class DoctrineDatagrid
         $this->doSort();
         $this->doFilter();
         $this->results = $this->getQueryResults();
+    }
+    
+    public function setManagerName($name)
+    {
+        $this->managerName = $name;
+        
+        return $this;
+    }
+    
+    private function getManager()
+    {
+        return $this->container->get('doctrine')->getManager($this->managerName);
     }
     
     private function isRequestedDatagrid()
@@ -195,14 +222,10 @@ class DoctrineDatagrid
             ->getQuery()
             ->getSingleScalarResult();
         
-        
-        /*echo $this->qb->select($this->select)
-            ->setFirstResult(($this->getCurrentPage()-1) * $this->getMaxPerPage())
-            ->setMaxResults($this->getMaxPerPage())
-            ->getQuery()->getDQL(); die();*/
-        
         $this->nbPages = ceil($this->nbResults/$this->getMaxPerPage());
-        //var_dump($this->getCurrentPage());
+        
+        //var_dump($this->qb->getEntityManager()->getConnection()->getDatabase()); die();
+        
         return $this->qb->select($this->select)
             ->setFirstResult(($this->getCurrentPage()-1) * $this->getMaxPerPage())
             ->setMaxResults($this->getMaxPerPage())
@@ -225,9 +248,7 @@ class DoctrineDatagrid
     
     public function query($callback)
     {
-        $this->qb = $this->container->get('doctrine')
-            ->getManager()
-            ->createQueryBuilder();
+        $this->qb = $this->getManager()->createQueryBuilder();
         
         $this->qb = call_user_func($callback, $this->qb);
         
@@ -398,9 +419,16 @@ class DoctrineDatagrid
     /* Sort features here ************/
     /*********************************/
     
+    public function setDefaultSort($defaultSort)
+    {
+        $this->defaultSorts = $defaultSort;
+        
+        return $this;
+    }
+    
     protected function doSort()
     {
-        $sort = $this->getSessionValue('sort', $this->sorts);
+        $sort = $this->getSessionValue('sort', $this->defaultSorts);
         
         foreach($sort as $column => $order)
         {
@@ -410,39 +438,39 @@ class DoctrineDatagrid
     
     public function updateSort()
     {
-        $sort = $this->getSessionValue('sort', $this->sorts);
+        $sort = $this->getSessionValue('sort', $this->defaultSorts);
         $sort[$this->getRequestedSortColumn()] = $this->getRequestedSortOrder();
         $this->setSessionValue('sort', $sort);
     }
     
     public function removeSort()
     {
-        $sort = $this->getSessionValue('sort', $this->sorts);
+        $sort = $this->getSessionValue('sort', $this->defaultSorts);
         unset($sort[$this->getRequestedSortedColumnRemoval()]);
         $this->setSessionValue('sort', $sort);
     }
     
     public function isSortedColumn($column)
     {
-        $sort = $this->getSessionValue('sort', $this->sorts);
+        $sort = $this->getSessionValue('sort', $this->defaultSorts);
         return isset($sort[$column]);
     }
     
     public function getSortedColumnOrder($column)
     {
-        $sort = $this->getSessionValue('sort', $this->sorts);
+        $sort = $this->getSessionValue('sort', $this->defaultSorts);
         return $sort[$column];
     }
     
     public function getSortedColumnPriority($column)
     {
-        $sort = $this->getSessionValue('sort', $this->sorts);
+        $sort = $this->getSessionValue('sort', $this->defaultSorts);
         return array_search($column, array_keys($sort));
     }
     
     public function getSortCount()
     {
-        $sort = $this->getSessionValue('sort', $this->sorts);
+        $sort = $this->getSessionValue('sort', $this->defaultSorts);
         return count($sort);
     }
     
@@ -628,7 +656,14 @@ class DoctrineDatagrid
     
     public function getDefaultMaxPerPage()
     {
-        return 30;
+        return $this->defaultMaxPerPage;
+    }
+    
+    public function setDefaultMaxPerPage($maxPerPage)
+    {
+        $this->defaultMaxPerPage = $maxPerPage;
+        
+        return $this;
     }
     
     public function getMaxPerPage()
