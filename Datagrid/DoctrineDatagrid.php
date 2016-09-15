@@ -218,7 +218,7 @@ class DoctrineDatagrid
     protected function getQueryResults()
     {
         $countQb = clone $this->qb;
-        $this->nbResults = $countQb->select('COUNT('.$this->id.')')
+        $this->nbResults = $countQb->select('COUNT(DISTINCT '.$this->id.')')
             ->getQuery()
             ->getSingleScalarResult();
         
