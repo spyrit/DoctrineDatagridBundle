@@ -114,21 +114,29 @@ class DoctrineDatagrid
     protected $exports;
     
     /**
+     * 
+     * @var params
+     */
+    protected $params;
+    
+    /**
      * The manager name used for queries.
      * Null is the perfect value if only one manager is used.
      * @var string 
      */
     protected $managerName = null;
 
-    public function __construct($container, $name)
+    public function __construct($container, $name, $params = array())
     {
         $this->container = $container;
         $this->name = $name;
+        $this->params = $params;
     }
     
-    public function create($name)
+    public function create($name, $params = array())
     {
         $this->name = $name;
+        $this->name = $params;
     }
     
     public function execute()
@@ -439,6 +447,10 @@ class DoctrineDatagrid
     public function updateSort()
     {
         $sort = $this->getSessionValue('sort', $this->defaultSorts);
+        if(isset($this->params['multi_sort']) && ($this->params['multi_sort'] == false))
+        {
+            unset($sort);
+        }
         $sort[$this->getRequestedSortColumn()] = $this->getRequestedSortOrder();
         $this->setSessionValue('sort', $sort);
     }

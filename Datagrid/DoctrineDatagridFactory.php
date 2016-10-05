@@ -24,8 +24,8 @@ class DoctrineDatagridFactory
      * @param string $name
      * @return \DoctrineDatagridBundle\Datagrid\DoctrineDatagrid
      */
-    public function create($name)
+    public function create($name, $params = array())
     {
-        return new DoctrineDatagrid($this->container, $name);
+        return new DoctrineDatagrid($this->container, $name, $params);
     }
 }
