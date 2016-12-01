@@ -234,7 +234,7 @@ class DoctrineDatagrid
         
         //var_dump($this->qb->getEntityManager()->getConnection()->getDatabase()); die();
         
-        return $this->qb->select($this->select)
+        return $this->qb->select('DISTINCT '.$this->select)
             ->setFirstResult(($this->getCurrentPage()-1) * $this->getMaxPerPage())
             ->setMaxResults($this->getMaxPerPage())
             ->getQuery()->getResult(); 
