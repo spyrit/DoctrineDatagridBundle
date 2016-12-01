@@ -1,5 +1,5 @@
 <div class="pagination-info">
 {% set start = (datagrid.currentPage - 1) * datagrid.maxPerPage %}
 {% set end = start + datagrid.maxPerPage %}
-{{ start }} - {% if end <= datagrid.nbResults %}{{ end }}{% else %}{{ datagrid.nbResults }}{% endif %} / {{ datagrid.nbResults }}
+{{ start + 1 }} - {% if end <= datagrid.nbResults %}{{ end }}{% else %}{{ datagrid.nbResults }}{% endif %} / {{ datagrid.nbResults }}
 </div>
