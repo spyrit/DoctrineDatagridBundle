@@ -572,6 +572,17 @@ class DoctrineDatagrid
         return $this->nbPages;
     }
     
+    public function getAllResults()
+    {
+        $this->buildForm();
+        $this->doSort();
+        $this->doFilter();
+
+        $qb = $this->getQueryBuilder()->select($this->select);
+
+        return $qb->getQuery()->execute();
+    }
+    
     /*********************************/
     /* Dynamic columns feature here **/
     /*********************************/
