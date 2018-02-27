@@ -8,15 +8,23 @@ use Symfony\Component\DependencyInjection\Container;
  */
 class DoctrineDatagridFactory
 {
-    protected $container;
-    
+    protected $doctrine;
+    protected $request_stack;
+    protected $session;
+    protected $form_factory;
+    protected $router;
+
     /**
      * Just a simple constructor
      * @param Container $container
      */
-    public function __construct(Container $container)
+    public function __construct($doctrine, $request_stack, $session, $form_factory, $router)
     {
-        $this->container = $container;
+        $this->doctrine = $doctrine;
+        $this->request_stack = $request_stack;
+        $this->session = $session;
+        $this->form_factory = $form_factory;
+        $this->router = $router;
     }
     
     /**
@@ -26,6 +34,6 @@ class DoctrineDatagridFactory
      */
     public function create($name, $params = array())
     {
-        return new DoctrineDatagrid($this->container, $name, $params);
+        return new DoctrineDatagrid($this->doctrine, $this->request_stack, $this->session, $this->form_factory, $this->router, $name, $params);
     }
 }
