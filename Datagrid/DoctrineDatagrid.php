@@ -23,7 +23,7 @@ class DoctrineDatagrid
     const PARAM2 = 'param2';
     
     /**
-     * The container witch is usefull to get Request parameters and differents 
+     * The container witch is usefull to get Request parameters and differents
      * options and parameters.
      * @var \Symfony\Component\DependencyInjection\Container
      */
@@ -490,6 +490,17 @@ class DoctrineDatagrid
     {
         $this->removeSessionValue('sort');
         return $this;
+    }
+
+    public function getAllResults()
+    {
+        $this->buildForm();
+        $this->doSort();
+        $this->doFilter();
+
+        $qb = $this->getQueryBuilder()->select($this->select);
+
+        return $qb->getQuery()->execute();
     }
     
     /*********************************/
