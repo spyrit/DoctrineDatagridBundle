@@ -492,17 +492,6 @@ class DoctrineDatagrid
         return $this;
     }
 
-    public function getAllResults()
-    {
-        $this->buildForm();
-        $this->doSort();
-        $this->doFilter();
-
-        $qb = $this->getQueryBuilder()->select($this->select);
-
-        return $qb->getQuery()->execute();
-    }
-    
     /*********************************/
     /* Export features here **********/
     /*********************************/
