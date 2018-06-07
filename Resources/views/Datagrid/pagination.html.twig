@@ -23,17 +23,17 @@
     {% set i = 0 %}
     {% for currentPage in available %}
         {% if(next != currentPage) %}
-            <li>
-                <a onclick="return false;" href="#">...</a>
+            <li class="page-item disabled">
+                <a onclick="return false;" href="#" class="page-link">...</a>
             </li>
             {% if(available[i+1] is defined) %}{% set next = available[i+1] %}{% endif %}
         {% else %} 
             {% set next = next + 1 %} 
         {% endif %}
-        <li class="{% if(currentPage == page) %}active{% endif %}">
+        <li class="page-item {% if(currentPage == page) %}active{% endif %}">
             <a href="{{ datagrid.getPaginationPath(route, currentPage, extraParameters) }}"
                title="Page {{ currentPage }}"
-               class="{% if(currentPage == page) %}active{% endif %}">
+               class="page-link {% if(currentPage == page) %}active{% endif %}">
                 {{ currentPage }}
             </a>
         </li>
