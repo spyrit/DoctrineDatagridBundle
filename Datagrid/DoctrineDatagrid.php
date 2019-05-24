@@ -2,6 +2,8 @@
 
 namespace Spyrit\Bundle\DoctrineDatagridBundle\Datagrid;
 
+use Doctrine\ORM\QueryBuilder;
+
 /**
  * Datagrid management class that support and handle pagination, sort, filter
  * and now, export actions.
@@ -30,7 +32,7 @@ class DoctrineDatagrid
 
     /**
      * The query builder that filter the results
-     * @var \Doctrine\ORM\QueryBuilder
+     * @var QueryBuilder
      */
     protected $qb;
 
@@ -40,19 +42,21 @@ class DoctrineDatagrid
     protected $filter;
 
     /**
-     *
      * @var array
      */
     protected $filters = [];
 
     /**
-     *
      * @var array
      */
     protected $sorts = [];
 
     /**
-     *
+     * @var array
+     */
+    protected $defaultFilters = [];
+
+    /**
      * @var array
      */
     protected $defaultSorts = [];
@@ -336,12 +340,16 @@ class DoctrineDatagrid
         $this->setSessionValue('filter', $filters);
     }
 
-    /**
-     * @todo Refactor and make available from the service
-     */
-    protected function getDefaultFilters()
+    public function getDefaultFilters()
     {
-        return [];
+        return $this->defaultFilters;
+    }
+
+    public function setDefaultFilters($defaultFilters)
+    {
+        $this->defaultFilters = $defaultFilters;
+
+        return $this;
     }
 
     public function resetFilters()
