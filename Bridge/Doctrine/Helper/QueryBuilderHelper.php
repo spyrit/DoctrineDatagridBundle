@@ -5,7 +5,7 @@ namespace Spyrit\Bundle\DoctrineDatagridBundle\Bridge\Doctrine\Helper;
 class QueryBuilderHelper
 {
     /**
-     * 
+     *
      * @param \Doctrine\DBAL\Query\QueryBuilder $qb
      */
     public static function addLeftJoin($field, $alias, $qb)
@@ -15,8 +15,8 @@ class QueryBuilderHelper
 
         foreach ($parts as $joins) {
             foreach ($joins as $join) {
-                foreach((array)$join as $key => $val){
-                    if($val == $alias){
+                foreach ((array)$join as $key => $val) {
+                    if ($val == $alias) {
                         $exists = true;
                         break 3;
                     }
@@ -42,8 +42,7 @@ class QueryBuilderHelper
             }
         }*/
 
-        if(!$exists)
-        {
+        if (!$exists) {
             $qb->leftJoin($field, $alias);
         }
         return $qb;

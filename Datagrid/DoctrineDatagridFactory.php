@@ -1,6 +1,7 @@
 <?php
 
 namespace Spyrit\Bundle\DoctrineDatagridBundle\Datagrid;
+
 use Symfony\Component\DependencyInjection\Container;
 
 /**
@@ -26,13 +27,13 @@ class DoctrineDatagridFactory
         $this->form_factory = $form_factory;
         $this->router = $router;
     }
-    
+
     /**
      * Create an instance of DoctrineDatagrid
      * @param string $name
-     * @return \DoctrineDatagridBundle\Datagrid\DoctrineDatagrid
+     * @return DoctrineDatagrid
      */
-    public function create($name, $params = array())
+    public function create($name, $params = [])
     {
         return new DoctrineDatagrid($this->doctrine, $this->request_stack, $this->session, $this->form_factory, $this->router, $name, $params);
     }

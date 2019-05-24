@@ -8,8 +8,8 @@ namespace Spyrit\Bundle\DoctrineDatagridBundle\Datagrid\Export;
 interface Export
 {
     public function execute();
-    
+
     public function getResponse();
-    
+
     public function getFilename();
 }

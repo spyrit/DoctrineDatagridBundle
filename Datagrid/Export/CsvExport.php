@@ -1,64 +1,65 @@
 <?php
 namespace Spyrit\Bundle\DoctrineDatagridBundle\Datagrid\Export;
 
-use Spyrit\Bundle\DoctrineDatagridBundle\Datagrid\Export\Export;
+use Doctrine\DBAL\Query\QueryBuilder;
+use CSanquer\ColibriCsv\CsvWriter;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\ResponseHeaderBag;
-use CSanquer\ColibriCsv\CsvWriter;
+
 /**
  * @author Maxime CORSON <maxime.corson@spyrit.net>
  */
 abstract class CsvExport implements Export
 {
     protected $content;
+
     /**
-     * @var array 
+     * @var array
      */
     protected $params;
+
     /**
-     * @var QueryBuilder 
+     * @var QueryBuilder
      */
     protected $qb;
-    
+
     public function __construct($qb, $params)
     {
         $this->qb = $qb;
         $this->params = $params;
     }
-    
+
     public function postExecute()
     {
         return $this;
     }
-    
+
     public function execute()
     {
         $this->postExecute();
-        
+
         $writer = new CsvWriter($this->getCsvWriterOptions());
         $writer->createTempStream();
-        
-        if($this->getHeader())
-        {
+
+        if ($this->getHeader()) {
             $writer->writeRow($this->getHeader());
         }
-        
+
         $results = $this->qb->getQuery()->execute();
 
-        foreach($results as $result) 
-        {
+        foreach ($results as $result) {
             $writer->writeRow($this->getRow($result));
         }
 
         $this->content = $writer->getFileContent();
         $writer->close();
-        
+
         return $this;
     }
-    
+
     public function getResponse()
     {
-        $response = new Response($this->content); 
+        $response = new Response($this->content);
         $disposition = $response->headers->makeDisposition(
             ResponseHeaderBag::DISPOSITION_ATTACHMENT,
             $this->getFilename()
@@ -75,22 +76,21 @@ abstract class CsvExport implements Export
         $response->setCharset('UTF-8');
         return $response;
     }
-    
-    public abstract function getHeader();
-    
-    public abstract function getRow($object);
-    
+
+    abstract public function getHeader();
+
+    abstract public function getRow($object);
+
     public function getDelimiter()
     {
         return ';';
     }
-    
+
     protected function getCsvWriterOptions()
     {
-        if(isset($this->params['csvWriter']))
-        {
+        if (isset($this->params['csvWriter'])) {
             return $this->params['csvWriter'];
         }
-        return array();
+        return [];
     }
 }
