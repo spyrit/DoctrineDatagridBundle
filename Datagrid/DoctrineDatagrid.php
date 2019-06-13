@@ -96,7 +96,17 @@ class DoctrineDatagrid
     protected $select;
 
     protected $id;
-
+    
+    /**
+     *
+     * @var string 
+     */
+    protected $groupBy;
+    
+    /**
+     *
+     * @var type 
+     */
     protected $exports;
 
     protected $params;
@@ -215,11 +225,14 @@ class DoctrineDatagrid
             ->getSingleScalarResult();
 
         $this->nbPages = ceil($this->nbResults/$this->getMaxPerPage());
-
-        return $this->qb->select('DISTINCT '.$this->select)
+        
+        $qb = $this->qb->select('DISTINCT '.$this->select)
             ->setFirstResult(($this->getCurrentPage()-1) * $this->getMaxPerPage())
-            ->setMaxResults($this->getMaxPerPage())
-            ->getQuery()->getResult();
+            ->setMaxResults($this->getMaxPerPage());
+        if ($this->groupBy) {
+            $qb = $this->qb->groupBy($this->groupBy);
+        }
+        return $qb->getQuery()->getResult(); 
     }
 
     /*********************************/
@@ -235,6 +248,16 @@ class DoctrineDatagrid
         return $this;
     }
 
+    public function groupBy($groupBy)
+    {
+        if (is_array($groupBy))
+        {
+            $groupBy = implode(', ', $groupBy);
+        }
+        $this->groupBy = $groupBy;
+        return $this;
+    }
+    
     public function query($callback)
     {
         $this->qb = $this->getManager()->createQueryBuilder();
