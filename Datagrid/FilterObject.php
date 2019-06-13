@@ -62,17 +62,18 @@ class FilterObject
         if (!$this->form) {
             return $this->builder->getForm();
         }
+
         return $this->form;
     }
 
     public function getType($field)
     {
-        return isset($this->types[$field])? $this->types[$field] : null;
+        return isset($this->types[$field]) ? $this->types[$field] : null;
     }
 
     public function getOptions($field)
     {
-        return isset($this->options[$field])? $this->options[$field] : null;
+        return isset($this->options[$field]) ? $this->options[$field] : null;
     }
 
     public function getOption($field, $option, $default = null)
@@ -80,6 +81,7 @@ class FilterObject
         if (isset($this->options[$field]) && isset($this->options[$field][$option])) {
             return $this->options[$field][$option];
         }
+
         return $default;
     }
 }

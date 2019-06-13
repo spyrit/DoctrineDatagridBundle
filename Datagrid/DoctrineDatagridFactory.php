@@ -16,7 +16,8 @@ class DoctrineDatagridFactory
     protected $router;
 
     /**
-     * Just a simple constructor
+     * Just a simple constructor.
+     *
      * @param Container $container
      */
     public function __construct($doctrine, $request_stack, $session, $form_factory, $router)
@@ -29,8 +30,10 @@ class DoctrineDatagridFactory
     }
 
     /**
-     * Create an instance of DoctrineDatagrid
+     * Create an instance of DoctrineDatagrid.
+     *
      * @param string $name
+     *
      * @return DoctrineDatagrid
      */
     public function create($name, $params = [])

@@ -1,7 +1,7 @@
 <?php
 
-use Symfony\Component\HttpKernel\Kernel;
 use Symfony\Component\Config\Loader\LoaderInterface;
+use Symfony\Component\HttpKernel\Kernel;
 
 class AppKernel extends Kernel
 {
@@ -28,7 +28,7 @@ class AppKernel extends Kernel
     {
         $loader->load(__DIR__.'/config/config_test.yml');
     }
-    
+
     /**
      * @return string
      */

@@ -1,4 +1,5 @@
 <?php
+
 // if the bundle is within a symfony project, try to reuse the project's autoload
 $autoload = __DIR__.'/../../../../../../app/autoload.php';
 
@@ -21,4 +22,4 @@ Visit http://getcomposer.org/ for more information.
 }
 
 $loader->add('Spyrit\PropelDatagridBundle\Tests', __DIR__);
-$loader->add('Spyrit\TestBundle', __DIR__ . '/Fixtures/App/src');
+$loader->add('Spyrit\TestBundle', __DIR__.'/Fixtures/App/src');

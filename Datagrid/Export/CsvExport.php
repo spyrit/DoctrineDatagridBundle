@@ -1,8 +1,9 @@
 <?php
+
 namespace Spyrit\Bundle\DoctrineDatagridBundle\Datagrid\Export;
 
-use Doctrine\DBAL\Query\QueryBuilder;
 use CSanquer\ColibriCsv\CsvWriter;
+use Doctrine\DBAL\Query\QueryBuilder;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\ResponseHeaderBag;
 
@@ -74,6 +75,7 @@ abstract class CsvExport implements Export
         $response->headers->set('Pragma', 'public');
         $response->headers->set('Content-Length', strlen($this->content));
         $response->setCharset('UTF-8');
+
         return $response;
     }
 
@@ -91,6 +93,7 @@ abstract class CsvExport implements Export
         if (isset($this->params['csvWriter'])) {
             return $this->params['csvWriter'];
         }
+
         return [];
     }
 }
