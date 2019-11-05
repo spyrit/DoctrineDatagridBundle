@@ -68,7 +68,7 @@ abstract class CsvExport implements Export
 
         $response->headers->set('Content-Description', 'File Transfer');
         $response->headers->set('Content-Disposition', $disposition);
-        $response->headers->set('Content-Type', 'application/vnd.ms-excel');
+        $response->headers->set('Content-Type', 'text/csv');
         $response->headers->set('Content-Transfer-Encoding', 'binary');
         $response->headers->set('Expires', '0');
         $response->headers->set('Cache-Control', 'must-revalidate, post-check=0, pre-check=0');
