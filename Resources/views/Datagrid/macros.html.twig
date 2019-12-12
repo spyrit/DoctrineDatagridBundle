@@ -34,7 +34,7 @@
 
 {% macro columnActions(column, route, datagrid, extraParams = {}) %}
     <div class="column-actions">
-        <i class="fa fa-plus-circle add-column" data-toggle="popover" data-placement="bottom" data-html="true" data-trigger="click" data-content="{% spaceless %}
+        <i class="fa fa-plus-circle add-column" data-toggle="popover" data-placement="bottom" data-html="true" data-trigger="click" data-content="{% apply spaceless %}
         {% if datagrid.availableAppendableColumns|length > 0 %}
         {{ '<div class="pagination-limit">
             <div class="btn-group btn-group-xs m-b-sm">
@@ -50,7 +50,7 @@
         </div>'|escape('html') }}
         {% endif %}
         {{ ('<a class="btn btn-danger btn-xs text-sm btn-block" href="' ~ datagrid.removeColumnPath(route, column, extraParams) ~ '"><i class="fa fa-times"></i> Supprimer la colonne</a>')|escape('html') }}
-        {% endspaceless %}"></i>
+        {% endapply %}"></i>
     </div>
 {% endmacro %}
     
