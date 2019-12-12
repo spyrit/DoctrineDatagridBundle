@@ -446,7 +446,7 @@ class DoctrineDatagrid
         $sort = $this->getSessionValue('sort', $this->defaultSorts);
 
         foreach ($sort as $column => $order) {
-            $this->getQueryBuilder()->orderBy($column, $order);
+            $this->getQueryBuilder()->addOrderBy($column, $order);
         }
     }
 
