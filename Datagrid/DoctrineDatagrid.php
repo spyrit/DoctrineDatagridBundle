@@ -3,6 +3,7 @@
 namespace Spyrit\Bundle\DoctrineDatagridBundle\Datagrid;
 
 use Doctrine\ORM\QueryBuilder;
+use Doctrine\ORM\Tools\Pagination\Paginator;
 
 /**
  * Datagrid management class that support and handle pagination, sort, filter
@@ -64,7 +65,7 @@ class DoctrineDatagrid
     protected $defaultSorts = [];
 
     /**
-     * Results of the query (in fact this is a PropelPager object which contains
+     * Results of the query (in fact this is a Paginator object which contains
      * the result set and some methods to display pager and extra things).
      */
     protected $results;
@@ -106,9 +107,6 @@ class DoctrineDatagrid
      */
     protected $groupBy;
 
-    /**
-     * @var type
-     */
     protected $exports;
 
     protected $params;
@@ -233,11 +231,14 @@ class DoctrineDatagrid
         $qb = $this->qb->select('DISTINCT '.$this->select)
             ->setFirstResult(($this->getCurrentPage() - 1) * $this->getMaxPerPage())
             ->setMaxResults($this->getMaxPerPage());
+
         if ($this->groupBy) {
             $qb = $this->qb->groupBy($this->groupBy);
+
+            return $qb->getQuery()->getResult();
         }
 
-        return $qb->getQuery()->getResult();
+        return new Paginator($this->qb->getQuery(), true);
     }
 
     /*********************************/
