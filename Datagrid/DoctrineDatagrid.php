@@ -987,4 +987,9 @@ class DoctrineDatagrid
 
         return false;
     }
+
+    public function isFiltered()
+    {
+        return count($this->filters) > 0;
+    }
 }
