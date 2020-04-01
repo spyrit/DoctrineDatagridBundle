@@ -990,6 +990,7 @@ class DoctrineDatagrid
 
     public function isFiltered()
     {
-        return count($this->filters) > 0;
+        $filters = $this->getSessionValue('filter');
+        return null !== $filters && count($filters) > 0;
     }
 }
