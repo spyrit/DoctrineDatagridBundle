@@ -740,7 +740,9 @@ class DoctrineDatagrid
 
     protected function getRequestedPage($default = null)
     {
-        return $this->getRequest()->get(self::PARAM1, $default);
+        $page = $this->getRequest()->get(self::PARAM1, $default);
+
+        return is_numeric($page) ? $page : $default;
     }
 
     protected function getRequestedNewColumn($default = null)
