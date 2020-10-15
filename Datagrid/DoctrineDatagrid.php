@@ -55,9 +55,9 @@ class DoctrineDatagrid
     protected $sorts = [];
 
     /**
-     * @var array
+     * @var array|null
      */
-    protected $allowedSorts = [];
+    protected $allowedSorts = null;
 
     /**
      * @var array
@@ -742,7 +742,7 @@ class DoctrineDatagrid
         $requested = $this->getRequest()->get(self::PARAM1, $default);
 
         // if there is a whitelist, ignore everything that is not in it
-        if ($this->allowedSorts && !in_array($requested, $this->allowedSorts)) {
+        if (null !== $this->allowedSorts && !in_array($requested, $this->allowedSorts)) {
             $requested = null;
         }
 
