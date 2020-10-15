@@ -57,6 +57,11 @@ class DoctrineDatagrid
     /**
      * @var array
      */
+    protected $allowedSorts = [];
+
+    /**
+     * @var array
+     */
     protected $defaultFilters = [];
 
     /**
@@ -378,6 +383,13 @@ class DoctrineDatagrid
         return $this->defaultFilters;
     }
 
+    public function setAllowedSorts($allowedSorts)
+    {
+        $this->allowedSorts = $allowedSorts;
+
+        return $this;
+    }
+
     public function setDefaultFilters($defaultFilters)
     {
         $this->defaultFilters = $defaultFilters;
@@ -453,12 +465,14 @@ class DoctrineDatagrid
 
     public function updateSort()
     {
-        $sort = $this->getSessionValue('sort', $this->defaultSorts);
+        $sorts = $this->getSessionValue('sort', $this->defaultSorts);
         if (isset($this->params['multi_sort']) && (false == $this->params['multi_sort'])) {
-            unset($sort);
+            $sorts = [];
         }
-        $sort[$this->getRequestedSortColumn()] = $this->getRequestedSortOrder();
-        $this->setSessionValue('sort', $sort);
+        if ($sortColumn = $this->getRequestedSortColumn()) {
+            $sorts[$sortColumn] = $this->getRequestedSortOrder();
+        }
+        $this->setSessionValue('sort', $sorts);
     }
 
     public function removeSort()
@@ -725,12 +739,26 @@ class DoctrineDatagrid
 
     protected function getRequestedSortColumn($default = null)
     {
-        return $this->getRequest()->get(self::PARAM1, $default);
+        $requested = $this->getRequest()->get(self::PARAM1, $default);
+
+        // if there is a whitelist, ignore everything that is not in it
+        if ($this->allowedSorts && !in_array($requested, $this->allowedSorts)) {
+            $requested = null;
+        }
+
+        return $requested ?? $default;
     }
 
     protected function getRequestedSortOrder($default = null)
     {
-        return $this->getRequest()->get(self::PARAM2, $default);
+        $requested = strtolower($this->getRequest()->get(self::PARAM2, $default));
+
+        // if there is a whitelist, ignore everything that is not in it
+        if (!in_array($requested, ['asc', 'desc'])) {
+            $requested = null;
+        }
+
+        return $requested ?? $default;
     }
 
     protected function getRequestedSortedColumnRemoval($default = null)
