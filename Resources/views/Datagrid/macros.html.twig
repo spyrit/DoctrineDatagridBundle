@@ -1,27 +1,28 @@
 {% macro sort(column, label, route, datagrid, extraParams = {}) %}
     {% if datagrid.isSortedColumn(column) %}
-        {% if datagrid.sortedColumnOrder(column) == 'desc' %} 
+        {% if datagrid.sortedColumnOrder(column) == 'desc' %}
             {% set order = 'asc' %}
-            {% set icon = 'fa-sort-desc' %}
+            {% set icon = 'fa-sort-desc fa-sort-down' %}
         {% else %}
             {% set order = 'desc' %}
-            {% set icon = 'fa-sort-asc' %}
+            {% set icon = 'fa-sort-asc fa-sort up' %}
         {%endif %}
     {% else %}
         {% set order = datagrid.defaultSortOrder %}
     {% endif %}
-    
+
     <a href="{{ datagrid.sortPath(route, column, order, extraParams) }}">
-        {{ label }} 
-    </a> 
-    
+        {{ label }}
+    </a>
+
     <span class="sort-icon">
-        <i class="fa fa-sort default-sort"></i>
         {% if datagrid.isSortedColumn(column) %}
             <i class="fa {{ icon }} active-sort"></i>
+        {% else %}
+            <i class="fa fa-sort default-sort"></i>
         {% endif %}
     </span>
-    
+
     {% if datagrid.sortCount > 1 and datagrid.isSortedColumn(column) %}
     <sup class="label label-success sort-label">
         {{ datagrid.sortedColumnPriority(column) + 1 }}
@@ -53,12 +54,12 @@
         {% endapply %}"></i>
     </div>
 {% endmacro %}
-    
+
 {% macro batchHeader(datagrid, checkableGlobally) %}
-    <input type="checkbox" class="batch-all" 
+    <input type="checkbox" class="batch-all"
         {% if checkableGlobally is defined and checkableGlobally %}
-        data-toggle="popover" 
-        data-trigger="manual" 
+        data-toggle="popover"
+        data-trigger="manual"
         data-placement="bottom"
         data-html="true"
         data-content="<i class='close fa fa-times-circle'></i>Les {{ datagrid.pager.results|length }} enregistrements de cette page sont sélectionnés. <a href='#' class='batch-all-globally'>Sélectionner les {{ datagrid.results|length }} enregistrements de la recherche.</a>"
@@ -68,13 +69,13 @@
         {% endif %}
     />
 {% endmacro %}
-    
+
 {% macro batch(identifier, datagrid) %}
-    <input type="checkbox" 
-        name="{{ datagrid.name }}[batch][{{ identifier }}]" 
-        id="{{ datagrid.name }}_{{ identifier }}" 
-        class="batch-one" 
-        value="{{ identifier }}" 
+    <input type="checkbox"
+        name="{{ datagrid.name }}[batch][{{ identifier }}]"
+        id="{{ datagrid.name }}_{{ identifier }}"
+        class="batch-one"
+        value="{{ identifier }}"
         {% if datagrid.isBatchChecked(identifier) %}
             checked="checked"
         {% else %}
