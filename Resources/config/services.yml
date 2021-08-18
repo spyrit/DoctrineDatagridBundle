@@ -1,2 +1,4 @@
 services:
+    _defaults:
+        autowire: true
     Spyrit\Bundle\DoctrineDatagridBundle\Datagrid\DoctrineDatagridFactory: ~
