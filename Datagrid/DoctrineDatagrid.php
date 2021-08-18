@@ -4,6 +4,7 @@ namespace Spyrit\Bundle\DoctrineDatagridBundle\Datagrid;
 
 use Doctrine\ORM\QueryBuilder;
 use Doctrine\ORM\Tools\Pagination\Paginator;
+use Spyrit\Bundle\DoctrineDatagridBundle\Datagrid\Export\Export;
 
 /**
  * Datagrid management class that support and handle pagination, sort, filter
@@ -522,7 +523,7 @@ class DoctrineDatagrid
     /*********************************/
 
     /**
-     * @return self
+     * @return Export
      */
     public function export($name, $params = [])
     {
