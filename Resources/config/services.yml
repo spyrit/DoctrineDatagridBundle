@@ -1,3 +1,2 @@
 services:
-    Spyrit\Bundle\DoctrineDatagridBundle\Datagrid\DoctrineDatagridFactory:
-            arguments: ["@doctrine","@request_stack","@session","@form.factory","@router"]
+    Spyrit\Bundle\DoctrineDatagridBundle\Datagrid\DoctrineDatagridFactory: ~

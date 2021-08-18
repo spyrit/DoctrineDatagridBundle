@@ -4,7 +4,13 @@ namespace Spyrit\Bundle\DoctrineDatagridBundle\Datagrid;
 
 use Doctrine\ORM\QueryBuilder;
 use Doctrine\ORM\Tools\Pagination\Paginator;
+use Doctrine\Persistence\ManagerRegistry;
 use Spyrit\Bundle\DoctrineDatagridBundle\Datagrid\Export\Export;
+use Symfony\Component\Form\FormFactoryInterface;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\RequestStack;
+use Symfony\Component\HttpFoundation\Session\SessionInterface;
+use Symfony\Component\Routing\RouterInterface;
 
 /**
  * Datagrid management class that support and handle pagination, sort, filter
@@ -125,12 +131,19 @@ class DoctrineDatagrid
      */
     protected $managerName = null;
 
-    public function __construct($doctrine, $request_stack, $session, $form_factory, $router, $name, $params = [])
-    {
+    public function __construct(
+        ManagerRegistry $doctrine,
+        RequestStack $requestStack,
+        SessionInterface $session,
+        FormFactoryInterface $formFactory,
+        RouterInterface $router,
+        string $name,
+        array $params = []
+    ) {
         $this->doctrine = $doctrine;
-        $this->request_stack = $request_stack;
+        $this->request_stack = $requestStack;
         $this->session = $session;
-        $this->form_factory = $form_factory;
+        $this->form_factory = $formFactory;
         $this->router = $router;
         $this->name = $name;
         $this->params = $params;
@@ -801,7 +814,7 @@ class DoctrineDatagrid
     /**
      * Shortcut to return the request service.
      *
-     * @return \Symfony\Component\HttpFoundation\Request
+     * @return Request
      */
     protected function getRequest()
     {
@@ -811,7 +824,7 @@ class DoctrineDatagrid
     /**
      * Shortcut to return the request service.
      *
-     * @return \Symfony\Component\HttpFoundation\Request
+     * @return SessionInterface
      */
     protected function getSession()
     {
@@ -821,7 +834,7 @@ class DoctrineDatagrid
     /**
      * return the Form Factory Service.
      *
-     * @return \Symfony\Component\Form\FormFactory
+     * @return FormFactoryInterface
      */
     protected function getFormFactory()
     {
@@ -852,10 +865,8 @@ class DoctrineDatagrid
 
     /**
      * Generate pagination route.
-     *
-     * @return string
      */
-    public function getPaginationPath($route, $page, $extraParams = [])
+    public function getPaginationPath($route, $page, $extraParams = []): string
     {
         $params = [
             self::ACTION => self::ACTION_PAGE,
@@ -863,34 +874,28 @@ class DoctrineDatagrid
             self::PARAM1 => $page,
         ];
 
-        return $this->router
-            ->generate($route, array_merge($params, $extraParams));
+        return $this->router->generate($route, array_merge($params, $extraParams));
     }
 
     /**
      * Generate reset route for the button view.
-     *
-     * @return string
      */
-    public function getResetPath($route, $extraParams = [])
+    public function getResetPath($route, $extraParams = []): string
     {
         $params = [
             self::ACTION => self::ACTION_RESET,
             self::ACTION_DATAGRID => $this->name,
         ];
 
-        return $this->router
-            ->generate($route, array_merge($params, $extraParams));
+        return $this->router->generate($route, array_merge($params, $extraParams));
     }
 
     /**
      * Generate sorting route for a given column to be displayed in view.
      *
      * @todo Remove the order parameter and ask to the datagrid to guess it ?
-     *
-     * @return string
      */
-    public function getSortPath($route, $column, $order, $extraParams = [])
+    public function getSortPath($route, $column, $order, $extraParams = []): string
     {
         $params = [
             self::ACTION => self::ACTION_SORT,
@@ -899,16 +904,13 @@ class DoctrineDatagrid
             self::PARAM2 => $order,
         ];
 
-        return $this->router
-            ->generate($route, array_merge($params, $extraParams));
+        return $this->router->generate($route, array_merge($params, $extraParams));
     }
 
     /**
      * Generate remove sort route for a given column to be displayed in view.
-     *
-     * @return string
      */
-    public function getRemoveSortPath($route, $column, $extraParams = [])
+    public function getRemoveSortPath($route, $column, $extraParams = []): string
     {
         $params = [
             self::ACTION => self::ACTION_REMOVE_SORT,
@@ -916,16 +918,13 @@ class DoctrineDatagrid
             self::PARAM1 => $column,
         ];
 
-        return $this->router
-            ->generate($route, array_merge($params, $extraParams));
+        return $this->router->generate($route, array_merge($params, $extraParams));
     }
 
     /**
      * Generate new column route for a given column to be displayed in view.
-     *
-     * @return string
      */
-    public function getNewColumnPath($route, $newColumn, $precedingColumn, $extraParams = [])
+    public function getNewColumnPath($route, $newColumn, $precedingColumn, $extraParams = []): string
     {
         $params = [
             self::ACTION => self::ACTION_ADD_COLUMN,
@@ -934,16 +933,13 @@ class DoctrineDatagrid
             self::PARAM2 => $precedingColumn,
         ];
 
-        return $this->router
-            ->generate($route, array_merge($params, $extraParams));
+        return $this->router->generate($route, array_merge($params, $extraParams));
     }
 
     /**
      * Generate remove column route for a given column to be displayed in view.
-     *
-     * @return string
      */
-    public function getRemoveColumnPath($route, $column, $extraParams = [])
+    public function getRemoveColumnPath($route, $column, $extraParams = []): string
     {
         $params = [
             self::ACTION => self::ACTION_REMOVE_COLUMN,
@@ -951,16 +947,13 @@ class DoctrineDatagrid
             self::PARAM1 => $column,
         ];
 
-        return $this->router
-            ->generate($route, array_merge($params, $extraParams));
+        return $this->router->generate($route, array_merge($params, $extraParams));
     }
 
     /**
      * Generate max per page route to be displayed in view.
-     *
-     * @return string
      */
-    public function getMaxPerPagePath($route, $limit, $extraParams = [])
+    public function getMaxPerPagePath($route, $limit, $extraParams = []): string
     {
         $params = [
             self::ACTION => self::ACTION_LIMIT,
@@ -968,8 +961,7 @@ class DoctrineDatagrid
             self::PARAM1 => $limit,
         ];
 
-        return $this->router
-            ->generate($route, array_merge($params, $extraParams));
+        return $this->router->generate($route, array_merge($params, $extraParams));
     }
 
     public function getBatchData()
@@ -977,7 +969,7 @@ class DoctrineDatagrid
         return (array) json_decode($this->getRequest()->cookies->get($this->name.'_batch'));
     }
 
-    public function isBatchChecked($identifier)
+    public function isBatchChecked($identifier): bool
     {
         $data = $this->getBatchData();
         if ($data) {
@@ -991,7 +983,7 @@ class DoctrineDatagrid
         return false;
     }
 
-    public function hasAllCheckedBatch()
+    public function hasAllCheckedBatch(): bool
     {
         $data = $this->getBatchData();
         if ($data) {
@@ -1005,7 +997,7 @@ class DoctrineDatagrid
         return false;
     }
 
-    public function hasCheckedBatch()
+    public function hasCheckedBatch(): bool
     {
         $data = $this->getBatchData();
         if ($data) {
@@ -1019,9 +1011,10 @@ class DoctrineDatagrid
         return false;
     }
 
-    public function isFiltered()
+    public function isFiltered(): bool
     {
         $filters = $this->getSessionValue('filter');
+
         return null !== $filters && count($filters) > 0;
     }
 }
