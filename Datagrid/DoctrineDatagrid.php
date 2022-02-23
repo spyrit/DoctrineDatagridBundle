@@ -361,7 +361,7 @@ class DoctrineDatagrid
             if (!isset($this->filters[$key]['query'])) {
                 throw new \Exception("There is no filter method defined for the field '{$key}'.");
             }
-            if ($value) {
+            if (isset($value)) {
                 $qb = call_user_func_array($this->filters[$key]['query'], [$value, $qb]);
             }
         }
