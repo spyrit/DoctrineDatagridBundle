@@ -3,7 +3,7 @@
 namespace Spyrit\Bundle\DoctrineDatagridBundle\Datagrid\Export;
 
 use CSanquer\ColibriCsv\CsvWriter;
-use Doctrine\DBAL\Query\QueryBuilder;
+use Doctrine\ORM\QueryBuilder;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\ResponseHeaderBag;
 
