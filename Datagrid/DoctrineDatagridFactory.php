@@ -5,7 +5,6 @@ namespace Spyrit\Bundle\DoctrineDatagridBundle\Datagrid;
 use Doctrine\Persistence\ManagerRegistry;
 use Symfony\Component\Form\FormFactoryInterface;
 use Symfony\Component\HttpFoundation\RequestStack;
-use Symfony\Component\HttpFoundation\Session\SessionInterface;
 use Symfony\Component\Routing\RouterInterface;
 
 /**
@@ -25,15 +24,14 @@ class DoctrineDatagridFactory
      public function __construct(
          ManagerRegistry $doctrine,
          RequestStack $requestStack,
-         SessionInterface $session,
          FormFactoryInterface $formFactory,
          RouterInterface $router
     ) {
         $this->doctrine = $doctrine;
         $this->request_stack = $requestStack;
-        $this->session = $session;
         $this->form_factory = $formFactory;
         $this->router = $router;
+        $this->session = $requestStack->getSession();
     }
 
     /**
@@ -41,6 +39,6 @@ class DoctrineDatagridFactory
      */
     public function create(string $name, array $params = []): DoctrineDatagrid
     {
-        return new DoctrineDatagrid($this->doctrine, $this->request_stack, $this->session, $this->form_factory, $this->router, $name, $params);
+        return new DoctrineDatagrid($this->doctrine, $this->request_stack, $this->form_factory, $this->router, $name, $params);
     }
 }

@@ -9,7 +9,6 @@ use Spyrit\Bundle\DoctrineDatagridBundle\Datagrid\Export\Export;
 use Symfony\Component\Form\FormFactoryInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
-use Symfony\Component\HttpFoundation\Session\SessionInterface;
 use Symfony\Component\Routing\RouterInterface;
 
 /**
@@ -134,7 +133,6 @@ class DoctrineDatagrid
     public function __construct(
         ManagerRegistry $doctrine,
         RequestStack $requestStack,
-        SessionInterface $session,
         FormFactoryInterface $formFactory,
         RouterInterface $router,
         string $name,
@@ -142,17 +140,17 @@ class DoctrineDatagrid
     ) {
         $this->doctrine = $doctrine;
         $this->request_stack = $requestStack;
-        $this->session = $session;
         $this->form_factory = $formFactory;
         $this->router = $router;
         $this->name = $name;
         $this->params = $params;
+        $this->session = $requestStack->getSession();
     }
 
     public function create($name, $params = [])
     {
         $this->name = $name;
-        $this->name = $params;
+        $this->params = $params;
     }
 
     public function execute()
