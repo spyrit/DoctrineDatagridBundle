@@ -452,6 +452,9 @@ class DoctrineDatagrid
 
     public function getAllowedFilterMethods()
     {
+        if (isset($this->params['method']) && ('get' == $this->params['method'])) {
+            return ['get'];
+        }
         return ['post'];
     }
 
