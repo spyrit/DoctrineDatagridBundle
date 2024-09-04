@@ -240,6 +240,7 @@ class DoctrineDatagrid
     {
         $countQb = clone $this->qb;
         $this->nbResults = $countQb->select('COUNT(DISTINCT '.$this->id.')')
+            ->orderBy($this->id)
             ->getQuery()
             ->getSingleScalarResult();
 
