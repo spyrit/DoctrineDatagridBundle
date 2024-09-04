@@ -2,12 +2,11 @@
 
 namespace Spyrit\Bundle\DoctrineDatagridBundle\Datagrid;
 
+use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\NonUniqueResultException;
 use Doctrine\ORM\NoResultException;
 use Doctrine\ORM\QueryBuilder;
 use Doctrine\ORM\Tools\Pagination\Paginator;
-use Doctrine\Persistence\ManagerRegistry;
-use Doctrine\Persistence\ObjectManager;
 use Exception;
 use Spyrit\Bundle\DoctrineDatagridBundle\Datagrid\Export\Export;
 use Symfony\Component\Form\FormFactoryInterface;
@@ -100,7 +99,7 @@ class DoctrineDatagrid
     protected ?string $managerName = null;
 
     public function __construct(
-        protected ManagerRegistry $doctrine,
+        protected EntityManagerInterface $entityManager,
         protected RequestStack $requestStack,
         protected FormFactoryInterface $formFactory,
         protected RouterInterface $router,
@@ -165,9 +164,9 @@ class DoctrineDatagrid
         return $this;
     }
 
-    private function getManager(): ObjectManager
+    private function getManager(): EntityManagerInterface
     {
-        return $this->doctrine->getManager($this->managerName);
+        return $this->entityManager;
     }
 
     /**
@@ -206,6 +205,9 @@ class DoctrineDatagrid
             ->set($this->getSessionName().'.'.$name, $value);
     }
 
+    /**
+     * @throws Exception
+     */
     private function removeSessionValue($name): void
     {
         $this->getRequest()
@@ -366,6 +368,9 @@ class DoctrineDatagrid
         }
     }
 
+    /**
+     * @throws Exception
+     */
     public function setFilterValue($name, $value): void
     {
         $filters = $this->getSessionValue('filter', []);
@@ -392,6 +397,9 @@ class DoctrineDatagrid
         return $this;
     }
 
+    /**
+     * @throws Exception
+     */
     public function resetFilters(): static
     {
         $this->removeSessionValue('filter');
@@ -399,11 +407,17 @@ class DoctrineDatagrid
         return $this;
     }
 
+    /**
+     * @throws Exception
+     */
     private function getSessionFilter(array $default = [])
     {
         return $this->getSessionValue('filter', $default);
     }
 
+    /**
+     * @throws Exception
+     */
     private function setSessionFilter(mixed $value): static
     {
         $this->setSessionValue('filter', $value);
@@ -486,6 +500,9 @@ class DoctrineDatagrid
         $this->setSessionValue('sort', $sort);
     }
 
+    /**
+     * @throws Exception
+     */
     public function isSortedColumn($column): bool
     {
         $sort = $this->getSessionValue('sort', $this->defaultSorts);
@@ -500,6 +517,9 @@ class DoctrineDatagrid
         return $sort[$column];
     }
 
+    /**
+     * @throws Exception
+     */
     public function getSortedColumnPriority($column): bool|int|string
     {
         $sort = $this->getSessionValue('sort', $this->defaultSorts);
@@ -507,6 +527,9 @@ class DoctrineDatagrid
         return array_search($column, array_keys($sort));
     }
 
+    /**
+     * @throws Exception
+     */
     public function getSortCount(): int
     {
         $sort = $this->getSessionValue('sort', $this->defaultSorts);
@@ -514,6 +537,9 @@ class DoctrineDatagrid
         return count($sort);
     }
 
+    /**
+     * @throws Exception
+     */
     public function resetSort(): static
     {
         $this->removeSessionValue('sort');
@@ -571,6 +597,9 @@ class DoctrineDatagrid
         return 'datagrid.'.$this->name;
     }
 
+    /**
+     * @throws Exception
+     */
     protected function updatePage(): static
     {
         $this->setSessionValue('page', $this->getRequestedPage(1));
@@ -578,6 +607,9 @@ class DoctrineDatagrid
         return $this;
     }
 
+    /**
+     * @throws Exception
+     */
     protected function resetPage(): static
     {
         $this->removeSessionValue('page');
@@ -585,11 +617,17 @@ class DoctrineDatagrid
         return $this;
     }
 
+    /**
+     * @throws Exception
+     */
     public function getCurrentPage()
     {
         return $this->getSessionValue('page', 1);
     }
 
+    /**
+     * @throws Exception
+     */
     public function setCurrentPage($page): void
     {
         $this->setSessionValue('page', $page);
@@ -680,6 +718,9 @@ class DoctrineDatagrid
         return [];
     }
 
+    /**
+     * @throws Exception
+     */
     public function getAvailableAppendableColumns(): array
     {
         $columns = $this->getSessionValue('columns', $this->getDefaultColumns());
@@ -727,11 +768,17 @@ class DoctrineDatagrid
         return $this;
     }
 
+    /**
+     * @throws Exception
+     */
     public function getMaxPerPage()
     {
         return $this->getSessionValue('limit', $this->getDefaultMaxPerPage());
     }
 
+    /**
+     * @throws Exception
+     */
     public function setMaxPerPage($value): static
     {
         $this->setSessionValue('limit', $value);
@@ -773,6 +820,9 @@ class DoctrineDatagrid
         return $requested ?? $default;
     }
 
+    /**
+     * @throws Exception
+     */
     protected function getRequestedSortOrder($default = null)
     {
         $requested = strtolower($this->getRequest()->get(self::PARAM2, $default));
@@ -1046,6 +1096,9 @@ class DoctrineDatagrid
         return false;
     }
 
+    /**
+     * @throws Exception
+     */
     public function isFiltered(): bool
     {
         $filters = $this->getSessionValue('filter');

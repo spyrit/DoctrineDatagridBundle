@@ -7,7 +7,6 @@ _svn
 _darcs
 .hg
 .monotone
-.svn
 .DS_Store
 __MACOSX
 .settings
