@@ -86,7 +86,7 @@ class DoctrineDatagrid
 
     protected string $select;
 
-    protected int $id;
+    protected string $id;
 
     protected string $groupBy;
 
@@ -126,6 +126,9 @@ class DoctrineDatagrid
         return $this;
     }
 
+    /**
+     * @throws Exception
+     */
     public function reset(): static
     {
         return $this
@@ -292,7 +295,7 @@ class DoctrineDatagrid
         return $this;
     }
 
-    public function id($id): static
+    public function id(string $id): static
     {
         $this->id = $id;
 
