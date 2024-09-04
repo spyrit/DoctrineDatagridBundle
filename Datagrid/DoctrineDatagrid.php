@@ -221,6 +221,7 @@ class DoctrineDatagrid
     /**
      * @throws NonUniqueResultException
      * @throws NoResultException
+     * @throws Exception
      */
     protected function getQueryResults()
     {
@@ -235,7 +236,7 @@ class DoctrineDatagrid
             ->setFirstResult(($this->getCurrentPage() - 1) * $this->getMaxPerPage())
             ->setMaxResults($this->getMaxPerPage());
 
-        if ($this->groupBy) {
+        if (isset($this->groupBy) && $this->groupBy) {
             $qb = $this->qb->groupBy($this->groupBy);
 
             return $qb->getQuery()->getResult();
