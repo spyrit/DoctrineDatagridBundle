@@ -106,6 +106,7 @@ class DoctrineDatagrid
         protected string $name,
         protected array $params = []
     ) {
+        $this->filter = new FilterObject($formFactory, $name);
     }
 
     public function create($name, $params = []): void
