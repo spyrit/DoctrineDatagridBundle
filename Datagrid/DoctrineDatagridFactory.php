@@ -27,7 +27,6 @@ class DoctrineDatagridFactory
          FormFactoryInterface $formFactory,
          RouterInterface $router
     ) {
-        $this->doctrine = $doctrine;
         $this->request_stack = $requestStack;
         $this->form_factory = $formFactory;
         $this->router = $router;
