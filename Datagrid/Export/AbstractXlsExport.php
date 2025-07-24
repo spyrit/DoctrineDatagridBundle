@@ -72,7 +72,12 @@ abstract class AbstractXlsExport implements Export
             if (isset($headers[$name])) {
                 $col = 1;
                 foreach ($headers[$name] as $value) {
-                    $sheet->setCellValueByColumnAndRow($col, $row, $value);
+                    if (method_exists($sheet, 'setCellValueByColumnAndRow')) {
+                        // setCellValueByColumnAndRow is deprecated in PhpSpreadsheet v1.23
+                        $sheet->setCellValueByColumnAndRow($col, $row, $value);
+                    } else {
+                        $sheet->setCellValue([$col, $row], $value);
+                    }
                     ++$col;
                 }
                 ++$row;
