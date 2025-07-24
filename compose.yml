@@ -1,0 +1,9 @@
+services:
+  php:
+    build: ./docker/d-php-fpm
+    volumes:
+      - ./:/var/www/html:rw,cached
+      - /tmp:/tmp:rw,cached
+      - ./docker/.composer:/var/www/.composer:rw,cached
+    environment:
+      USER_ID: 1000

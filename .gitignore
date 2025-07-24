@@ -7,8 +7,6 @@ _svn
 _darcs
 .hg
 .monotone
-.svn
-_svn
 .DS_Store
 __MACOSX
 .settings
@@ -23,3 +21,8 @@ catalog.xml
 *.psd
 *~
 .htpasswd
+
+/docker/.composer
+/vendor/
+composer.lock
+.phpunit.result.cache
