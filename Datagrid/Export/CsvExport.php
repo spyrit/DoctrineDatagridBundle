@@ -14,15 +14,9 @@ abstract class CsvExport implements Export
 {
     protected $content;
 
-    /**
-     * @var array
-     */
-    protected $params;
+    protected array $params;
 
-    /**
-     * @var QueryBuilder
-     */
-    protected $qb;
+    protected QueryBuilder $qb;
 
     public function __construct($qb, $params)
     {
@@ -30,12 +24,12 @@ abstract class CsvExport implements Export
         $this->params = $params;
     }
 
-    public function postExecute()
+    public function postExecute(): static
     {
         return $this;
     }
 
-    public function execute()
+    public function execute(): static
     {
         $this->postExecute();
 
@@ -58,7 +52,7 @@ abstract class CsvExport implements Export
         return $this;
     }
 
-    public function getResponse()
+    public function getResponse(): Response
     {
         $response = new Response($this->content);
         $disposition = $response->headers->makeDisposition(
@@ -83,12 +77,12 @@ abstract class CsvExport implements Export
 
     abstract public function getRow($object);
 
-    public function getDelimiter()
+    public function getDelimiter(): string
     {
         return ';';
     }
 
-    protected function getCsvWriterOptions()
+    protected function getCsvWriterOptions(): array
     {
         if (isset($this->params['csvWriter'])) {
             return $this->params['csvWriter'];

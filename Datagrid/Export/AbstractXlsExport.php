@@ -13,41 +13,40 @@ abstract class AbstractXlsExport implements Export
 {
     protected $content;
 
-    /**
-     * @var array
-     */
-    protected $params;
+    protected array $params;
 
-    /**
-     * @var QueryBuilder
-     */
-    protected $qb;
+    protected QueryBuilder $qb;
 
-    public function __construct($qb, $params)
+    public function __construct(QueryBuilder $qb, array $params)
     {
         $this->qb = $qb;
         $this->params = $params;
     }
 
-    abstract public function getFilename();
+    abstract public function getFilename(): string;
 
-    abstract public function getHeader();
+    abstract public function getHeader(): array;
 
     abstract public function getRow($object);
 
-    public function getData(QueryBuilder $qb)
+    public function getData(QueryBuilder $qb): mixed
     {
         return [$qb->getQuery()->execute()];
     }
 
-    public function postExecute()
+    public function postExecute(): static
     {
         return $this;
     }
 
-    public function execute()
+    public function execute(): static
     {
+        // postExecute before executing ? Meh.
         $this->postExecute();
+
+        if (!class_exists(Spreadsheet::class)) {
+            throw new \LogicException('PhpSpreadsheet is required to export to XLSX. Try `composer require phpoffice/phpspreadsheet`');
+        }
 
         $spreadsheet = new Spreadsheet();
 
@@ -57,8 +56,6 @@ abstract class AbstractXlsExport implements Export
         $datas = $this->getData($this->qb);
 
         $writer = new Xlsx($spreadsheet);
-
-        $row = 1;
 
         foreach ($datas as $name => $data) {
             $col = 0;
@@ -106,7 +103,7 @@ abstract class AbstractXlsExport implements Export
         return $this;
     }
 
-    public function getResponse()
+    public function getResponse(): Response
     {
         $response = new Response($this->content);
         $disposition = $response->headers->makeDisposition(

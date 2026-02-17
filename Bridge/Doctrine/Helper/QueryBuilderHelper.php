@@ -2,12 +2,11 @@
 
 namespace Spyrit\Bundle\DoctrineDatagridBundle\Bridge\Doctrine\Helper;
 
+use Doctrine\ORM\QueryBuilder;
+
 class QueryBuilderHelper
 {
-    /**
-     * @param \Doctrine\DBAL\Query\QueryBuilder $qb
-     */
-    public static function addLeftJoin($field, $alias, $qb)
+    public static function addLeftJoin(string $field, string $alias, QueryBuilder $qb): QueryBuilder
     {
         $parts = $qb->getDQLParts()['join'];
         $exists = false;
