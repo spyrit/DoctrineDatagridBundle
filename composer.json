@@ -23,12 +23,12 @@
     "require": {
         "php": "^8.2",
         "csanquer/colibri-csv": "1.2.*",
-        "doctrine/orm": "^2.0",
-        "symfony/form": "^7.0",
-        "symfony/http-foundation": "^7.0",
-        "symfony/routing": "^7.0",
-        "symfony/config": "^7.0",
-        "symfony/http-kernel": "^7.0",
+        "doctrine/orm": "^2.2|^3.0",
+        "symfony/form": "^7.0|^8.0",
+        "symfony/http-foundation": "^7.0|^8.0",
+        "symfony/routing": "^7.0|^8.0",
+        "symfony/config": "^7.0|^8.0",
+        "symfony/http-kernel": "^7.0|^8.0",
         "webmozart/assert": "^2.1.2"
     },
     "require-dev": {

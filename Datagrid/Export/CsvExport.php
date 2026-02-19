@@ -24,7 +24,7 @@ abstract class CsvExport implements Export
         $this->params = $params;
     }
 
-    public function postExecute(): static
+    public function postExecute()
     {
         return $this;
     }

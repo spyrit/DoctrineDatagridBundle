@@ -34,7 +34,7 @@ abstract class AbstractXlsExport implements Export
         return [$qb->getQuery()->execute()];
     }
 
-    public function postExecute(): static
+    public function postExecute()
     {
         return $this;
     }

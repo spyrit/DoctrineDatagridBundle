@@ -2,16 +2,21 @@
 
 namespace Spyrit\Bundle\DoctrineDatagridBundle\Datagrid;
 
+use Doctrine\ORM\EntityManagerInterface;
+use Doctrine\ORM\Query;
 use Doctrine\ORM\QueryBuilder;
 use Doctrine\ORM\Tools\Pagination\Paginator;
-use Doctrine\ORM\EntityManagerInterface;
 use Spyrit\Bundle\DoctrineDatagridBundle\Datagrid\Export\Export;
+use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\Form\FormFactoryInterface;
+use Symfony\Component\Form\FormTypeInterface;
+use Symfony\Component\Form\FormView;
+use Symfony\Component\HttpFoundation\ParameterBag;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
+use Symfony\Component\HttpFoundation\Session\SessionInterface;
 use Symfony\Component\Routing\RouterInterface;
 use Webmozart\Assert\Assert;
-use Symfony\Component\Form\FormView;
 
 /**
  * Datagrid management class that support and handle pagination, sort, filter
@@ -21,6 +26,8 @@ use Symfony\Component\Form\FormView;
  */
 class DoctrineDatagrid
 {
+    public const VERSION_SYMFONY7 = 'symfony7';
+
     public const ACTION = 'action';
     public const ACTION_DATAGRID = 'datagrid';
     public const ACTION_PAGE = 'page';
@@ -30,25 +37,51 @@ class DoctrineDatagrid
     public const ACTION_LIMIT = 'limit';
     public const ACTION_ADD_COLUMN = 'add-column';
     public const ACTION_REMOVE_COLUMN = 'remove-column';
+
+    public const ALLOWED_ACTIONS = [
+        self::ACTION,
+        self::ACTION_DATAGRID,
+        self::ACTION_PAGE,
+        self::ACTION_SORT,
+        self::ACTION_REMOVE_SORT,
+        self::ACTION_RESET,
+        self::ACTION_LIMIT,
+        self::ACTION_ADD_COLUMN,
+        self::ACTION_REMOVE_COLUMN,
+    ];
+
+    public const ALLOWED_SORT_DIRECTIONS = ['ASC', 'DESC'];
+
+
     public const PARAM1 = 'param1';
     public const PARAM2 = 'param2';
 
-    protected $request_stack;
-    protected $session;
-    protected $form_factory;
-    protected $router;
+    protected RequestStack $requestStack;
+    protected SessionInterface $session;
+    protected FormFactoryInterface $formFactory;
+    protected RouterInterface $router;
 
     /**
      * The query builder that filter the results.
      */
     protected QueryBuilder $qb;
 
-    protected ?FilterObject $filter;
+    protected ?FilterObject $filterObject = null;
 
+    /**
+     * @var array<
+     *     string,
+     *     array{
+     *         type: class-string<FormTypeInterface>,
+     *         options: mixed[],
+     *         query: callable
+     *     }
+     * >
+     */
     protected array $filters = [];
 
     /**
-     * @var array<string, string>
+     * @var array<string, 'ASC'|'DESC'>
      */
     protected array $sorts = [];
 
@@ -90,6 +123,8 @@ class DoctrineDatagrid
 
     protected string $id;
 
+    protected bool $distinct = true;
+
     protected ?string $groupBy = null;
 
     protected $exports;
@@ -106,14 +141,15 @@ class DoctrineDatagrid
 
     public function __construct(
         private readonly EntityManagerInterface $em,
-        RequestStack $requestStack,
-        FormFactoryInterface $formFactory,
-        RouterInterface $router,
-        string $name,
-        array $params = []
-    ) {
-        $this->request_stack = $requestStack;
-        $this->form_factory = $formFactory;
+        RequestStack                            $requestStack,
+        FormFactoryInterface                    $formFactory,
+        RouterInterface                         $router,
+        string                                  $name,
+        array                                   $params = []
+    )
+    {
+        $this->requestStack = $requestStack;
+        $this->formFactory = $formFactory;
         $this->router = $router;
         $this->name = $name;
         $this->params = $params;
@@ -152,13 +188,27 @@ class DoctrineDatagrid
     {
         if ($this->isRequestedDatagrid()) {
             switch ($this->getRequestedAction()) {
-                case self::ACTION_SORT: $this->updateSort(); break;
-                case self::ACTION_PAGE: $this->updatePage(); break;
-                case self::ACTION_LIMIT:  $this->limit(); break;
-                case self::ACTION_REMOVE_SORT: $this->removeSort(); break;
-                case self::ACTION_RESET: $this->reset(); break;
-                case self::ACTION_ADD_COLUMN: $this->addColumn(); break;
-                case self::ACTION_REMOVE_COLUMN: $this->removeColumn(); break;
+                case self::ACTION_SORT:
+                    $this->updateSort();
+                    break;
+                case self::ACTION_PAGE:
+                    $this->updatePage();
+                    break;
+                case self::ACTION_LIMIT:
+                    $this->limit();
+                    break;
+                case self::ACTION_REMOVE_SORT:
+                    $this->removeSort();
+                    break;
+                case self::ACTION_RESET:
+                    $this->reset();
+                    break;
+                case self::ACTION_ADD_COLUMN:
+                    $this->addColumn();
+                    break;
+                case self::ACTION_REMOVE_COLUMN:
+                    $this->removeColumn();
+                    break;
             }
         }
         $this->doSort();
@@ -192,45 +242,46 @@ class DoctrineDatagrid
     {
         return $this->getRequest()
             ->getSession()
-            ->get($this->getSessionName().'.'.$name, $default);
+            ->get($this->getSessionName() . '.' . $name, $default);
     }
 
     private function setSessionValue(string $name, mixed $value): void
     {
         $this->getRequest()
             ->getSession()
-            ->set($this->getSessionName().'.'.$name, $value);
+            ->set($this->getSessionName() . '.' . $name, $value);
     }
 
     private function removeSessionValue(string $name)
     {
         return $this->getRequest()
             ->getSession()
-            ->remove($this->getSessionName().'.'.$name);
+            ->remove($this->getSessionName() . '.' . $name);
     }
 
     protected function getQueryResults(): Paginator|array
     {
-        $countQb = clone $this->qb;
-        $this->nbResults = $countQb->select('COUNT(DISTINCT '.$this->id.')')
+        $countQb = $this->createCountQb($this->qb);
+        $countSelect = 'COUNT(' . ($this->distinct ? 'DISTINCT ' : '') . $this->id . ')';
+        $this->nbResults = $countQb->select($countSelect)
             ->orderBy($this->id)
             ->getQuery()
             ->getSingleScalarResult();
 
         $this->nbPages = ceil($this->nbResults / $this->getMaxPerPage());
 
-        $this->qb->select('DISTINCT '.$this->select)
+        $qb = $this->qb->select(($this->distinct ? 'DISTINCT ' : '') . $this->select)
             ->setFirstResult(($this->getCurrentPage() - 1) * $this->getMaxPerPage())
             ->setMaxResults($this->getMaxPerPage());
 
         if ($this->groupBy) {
-            $this->qb->groupBy($this->groupBy);
+            $qb = $this->qb->groupBy($this->groupBy);
         }
 
-        return $this->createPaginator($this->qb->getQuery());
+        return $this->createPaginator($qb);
     }
 
-    protected function createPaginator($query): Paginator
+    protected function createPaginator(Query|QueryBuilder $query): Paginator
     {
         return new Paginator($query, $this->shouldFetchJoinCollection);
     }
@@ -256,6 +307,16 @@ class DoctrineDatagrid
         return $this;
     }
 
+    public function distinct(bool $distinct = true): static
+    {
+        $this->distinct = $distinct;
+
+        return $this;
+    }
+
+    /**
+     * @param string|string[] $groupBy
+     */
     public function groupBy(string|array $groupBy): static
     {
         if (is_array($groupBy)) {
@@ -277,7 +338,13 @@ class DoctrineDatagrid
         return $this;
     }
 
-    public function filter($name, $type, $options, $callback): static
+    /**
+     * @param string $name
+     * @param class-string<FormTypeInterface> $type
+     * @param mixed[] $options
+     * @param callable $callback
+     */
+    public function filter(string $name, string $type, array $options, callable $callback): static
     {
         $this->filters[$name] = [
             'type' => $type,
@@ -288,9 +355,13 @@ class DoctrineDatagrid
         return $this;
     }
 
-    public function sort(string $column, string $order = 'asc'): static
+    /**
+     * @param 'ASC'|'DESC'|'asc'|'desc' $order
+     */
+    public function sort(string $column, string $order = 'ASC'): static
     {
-        $this->sorts[$column] = $order;
+        $sortDirection = Util::validateSortDirection($order);
+        $this->sorts[$column] = $sortDirection;
 
         return $this;
     }
@@ -310,24 +381,24 @@ class DoctrineDatagrid
     {
         if (in_array(
                 $this->getRequest()->getMethod(),
-                array_map('strtoupper', $this->getAllowedFilterMethods())
-            ) && $this->getRequest()->get($this->filter->getForm()->getName())
+                $this->getAllowedFilterMethods()
+            ) && $this->filterObject && $this->getRequestParams($this->getRequest())->all($this->filterObject->getForm()->getName())
         ) {
             $this->setCurrentPage(1);
-            $data = $this->getRequest()->get($this->filter->getForm()->getName());
+            $data = $this->getRequestParams($this->getRequest())->all($this->filterObject->getForm()->getName());
         } else {
             $data = $this->getSessionValue('filter', $this->getDefaultFilters());
         }
 
-        if ($this->filter) {
-            $this->filter->submit($data);
-            $form = $this->filter->getForm();
+        if ($this->filterObject) {
+            $this->filterObject->submit($data);
+            $form = $this->filterObject->getForm();
             $formData = $form->getData();
 
             if ($form->isValid()) {
                 if (in_array(
                     $this->getRequest()->getMethod(),
-                    array_map('strtoupper', $this->getAllowedFilterMethods())
+                    $this->getAllowedFilterMethods()
                 )) {
                     $this->setSessionValue('filter', $data);
                 }
@@ -338,7 +409,7 @@ class DoctrineDatagrid
         return $this;
     }
 
-    private function applyFilter($data): void
+    private function applyFilter(mixed $data): void
     {
         $qb = $this->qb;
         foreach ($data as $key => $value) {
@@ -355,17 +426,17 @@ class DoctrineDatagrid
     private function buildForm(): void
     {
         if (!empty($this->filters)) {
-            $this->filter = new FilterObject($this->getFormFactory(), $this->name);
+            $this->filterObject = new FilterObject($this->getFormFactory(), $this->name);
 
             foreach ($this->filters as $name => $filter) {
-                $this->filter->add(
+                $this->filterObject->add(
                     $name,
                     $filter['type'],
                     isset($filter['options']) ? $filter['options'] : [],
                     isset($filter['value']) ? $filter['value'] : null
                 );
             }
-            $this->configureFilterBuilder($this->filter->getBuilder());
+            $this->configureFilterBuilder($this->filterObject->getBuilder());
         }
     }
 
@@ -388,7 +459,7 @@ class DoctrineDatagrid
         return $this;
     }
 
-    public function setDefaultFilters($defaultFilters): static
+    public function setDefaultFilters(array $defaultFilters): static
     {
         $this->defaultFilters = $defaultFilters;
 
@@ -419,29 +490,27 @@ class DoctrineDatagrid
      */
     public function getFilterFormView(): FormView
     {
-        return $this->filter->getForm()->createView();
+        return $this->filterObject->getForm()->createView();
     }
 
-    /*public function configureFilterForm()
+    /**
+     * Do what you want with the builder.
+     * For example, add an Event Listener PRE/POST_SET_DATA, etc.
+     */
+    public function configureFilterBuilder(FormBuilderInterface $builder): void
     {
-        return array();
-    }*/
-
-    public function configureFilterBuilder($builder): void
-    {
-        /*
-         * Do what you want with the builder.
-         * For example, add Event Listener PRE/POST_SET_DATA, etc.
-         */
         return;
     }
 
+    /**
+     * @return array<'GET'|'POST'>
+     */
     public function getAllowedFilterMethods(): array
     {
         if (isset($this->params['method']) && ('get' === $this->params['method'])) {
-            return ['get'];
+            return [Request::METHOD_GET];
         }
-        return ['post'];
+        return [Request::METHOD_POST];
     }
 
     /*********************************/
@@ -467,7 +536,7 @@ class DoctrineDatagrid
     public function updateSort(): void
     {
         $sorts = $this->getSessionValue('sort', $this->defaultSorts);
-        if (isset($this->params['multi_sort']) && (false == $this->params['multi_sort'])) {
+        if (isset($this->params['multi_sort']) && !$this->params['multi_sort']) {
             $sorts = [];
         }
         if ($sortColumn = $this->getRequestedSortColumn()) {
@@ -522,14 +591,14 @@ class DoctrineDatagrid
     /** Export features here *********/
     /*********************************/
 
-    public function export($name, $params = []): mixed
+    public function export(string $name, array $params = []): mixed
     {
         $class = $this->getExport($name);
         $this->buildForm();
         $this->doSort();
         $this->doFilter();
 
-        $qb = $this->getQueryBuilder()->select($this->select);
+        $qb = $this->getQueryBuilder()->select(($this->distinct ? 'DISTINCT ' : '') . $this->select);
 
         $export = new $class($qb, $params);
 
@@ -541,7 +610,7 @@ class DoctrineDatagrid
         $exports = $this->getExports();
 
         if (!isset($exports[$name])) {
-            throw new \Exception('The "'.$name.'" export doesn\'t exist in this datagrid.');
+            throw new \Exception('The "' . $name . '" export doesn\'t exist in this datagrid.');
         }
 
         return $exports[$name];
@@ -567,7 +636,7 @@ class DoctrineDatagrid
 
     public function getSessionName(): string
     {
-        return 'datagrid.'.$this->name;
+        return 'datagrid.' . $this->name;
     }
 
     protected function updatePage(): static
@@ -589,9 +658,11 @@ class DoctrineDatagrid
         return $this->getSessionValue('page', 1);
     }
 
-    public function setCurrentPage(int $page)
+    public function setCurrentPage(int $page): static
     {
-        return $this->setSessionValue('page', $page);
+        $this->setSessionValue('page', $page);
+
+        return $this;
     }
 
     public function getNbResults(): int
@@ -606,11 +677,10 @@ class DoctrineDatagrid
 
     public function getAllResults(): mixed
     {
-        $this->buildForm();
         $this->doSort();
         $this->doFilter();
 
-        $qb = $this->getQueryBuilder()->select($this->select);
+        $qb = $this->getQueryBuilder()->select(($this->distinct ? 'DISTINCT ' : '') . $this->select);
 
         return $qb->getQuery()->execute();
     }
@@ -735,19 +805,25 @@ class DoctrineDatagrid
     /** Routing helper methods here **/
     /*********************************/
 
-    protected function getRequestedAction($default = null): string
+    /**
+     * @param null|'action'|'datagrid'|'page'|'sort'|'remove-sort'|'reset'|'limit'|'add-column'|'remove-column' $default
+     * @return string
+     */
+    protected function getRequestedAction(?string $default = null): string
     {
-        return $this->getRequest()->get(self::ACTION, $default);
+        Assert::inArray($default, [null, ...self::ALLOWED_ACTIONS], 'Action must be one of: ' . implode(', ', self::ALLOWED_ACTIONS) . '. %s given.');
+
+        return $this->getRequestParams($this->getRequest())->get(self::ACTION, $default);
     }
 
-    protected function getRequestedDatagrid(mixed $default = null): mixed
+    protected function getRequestedDatagrid(?string $default = null): mixed
     {
-        return $this->getRequest()->get(self::ACTION_DATAGRID, $default);
+        return $this->getRequestParams($this->getRequest())->get(self::ACTION_DATAGRID, $default);
     }
 
     protected function getRequestedSortColumn(?string $default = null): ?string
     {
-        $requested = $this->getRequest()->get(self::PARAM1, $default);
+        $requested = Util::validateSortDirection($this->getRequestParams($this->getRequest())->get(self::PARAM1, $default));
 
         // if there is a whitelist, ignore everything that is not in it
         if (null !== $this->allowedSorts && !in_array($requested, $this->allowedSorts)) {
@@ -757,12 +833,16 @@ class DoctrineDatagrid
         return $requested ?? $default;
     }
 
+    /**
+     * @param null|'ASC'|'DESC'|'asc'|'desc' $default
+     * @return string|null
+     */
     protected function getRequestedSortOrder(?string $default = null): ?string
     {
-        $requested = strtolower($this->getRequest()->get(self::PARAM2, $default));
+        $requested = Util::validateSortDirection($this->getRequestParams($this->getRequest())->get(self::PARAM2, $default));
 
         // if there is a whitelist, ignore everything that is not in it
-        if (!in_array($requested, ['asc', 'desc'])) {
+        if (!in_array($requested, self::ALLOWED_SORT_DIRECTIONS, true)) {
             $requested = null;
         }
 
@@ -771,51 +851,45 @@ class DoctrineDatagrid
 
     protected function getRequestedSortedColumnRemoval(?string $default = null): ?string
     {
-        return $this->getRequest()->get(self::PARAM1, $default);
+        return $this->getRequestParams($this->getRequest())->get(self::PARAM1, $default);
     }
 
     protected function getRequestedPage(int $default = null): int
     {
-        $page = (int) $this->getRequest()->get(self::PARAM1, $default);
+        $page = $this->getRequestParams($this->getRequest())->getInt(self::PARAM1, $default);
 
         return $page > 0 ? $page : $default;
     }
 
-    protected function getRequestedNewColumn($default = null)
+    protected function getRequestedNewColumn(?string $default = null)
     {
-        return $this->getRequest()->get(self::PARAM1, $default);
+        return $this->getRequestParams($this->getRequest())->get(self::PARAM1, $default);
     }
 
-    protected function getRequestedPrecedingNewColumn($default = null)
+    protected function getRequestedPrecedingNewColumn(?string $default = null)
     {
-        return $this->getRequest()->get(self::PARAM2, $default);
+        return $this->getRequestParams($this->getRequest())->get(self::PARAM2, $default);
     }
 
-    protected function getRequestedColumnRemoval($default = null)
+    protected function getRequestedColumnRemoval(?string $default = null)
     {
-        return $this->getRequest()->get(self::PARAM1, $default);
+        return $this->getRequestParams($this->getRequest())->get(self::PARAM1, $default);
     }
 
     protected function getRequestedLimit(int $default = null): int
     {
-        return $this->getRequest()->get(self::PARAM1, $default);
+        return $this->getRequestParams($this->getRequest())->get(self::PARAM1, $default);
     }
 
     /*********************************/
     /** Global service shortcuts *****/
     /*********************************/
 
-    /**
-     * Shortcut to return the request service.
-     */
     protected function getRequest(): Request
     {
-        return $this->request_stack->getCurrentRequest();
+        return $this->requestStack->getCurrentRequest();
     }
 
-    /**
-     * Shortcut to return the request service.
-     */
     protected function getSession(): SessionInterface
     {
         return $this->session;
@@ -826,7 +900,7 @@ class DoctrineDatagrid
      */
     protected function getFormFactory(): FormFactoryInterface
     {
-        return $this->form_factory;
+        return $this->formFactory;
     }
 
     public function getQueryBuilder(): QueryBuilder
@@ -954,7 +1028,7 @@ class DoctrineDatagrid
 
     public function getBatchData(): array
     {
-        return (array) json_decode($this->getRequest()->cookies->get($this->name.'_batch'));
+        return (array)json_decode($this->getRequest()->cookies->get($this->name . '_batch'));
     }
 
     public function isBatchChecked(mixed $identifier): bool
@@ -1011,5 +1085,14 @@ class DoctrineDatagrid
         $this->shouldFetchJoinCollection = $shouldFetchJoinCollection;
 
         return $this;
+    }
+
+    public function getRequestParams(Request $request): ParameterBag
+    {
+        if ($request->getMethod() === Request::METHOD_POST) {
+            return $request->request;
+        }
+
+        return $request->query;
     }
 }
