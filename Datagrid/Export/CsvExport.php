@@ -4,6 +4,7 @@ namespace Spyrit\Bundle\DoctrineDatagridBundle\Datagrid\Export;
 
 use CSanquer\ColibriCsv\CsvWriter;
 use Doctrine\ORM\QueryBuilder;
+use Spyrit\Bundle\DoctrineDatagridBundle\Datagrid\DoctrineDatagrid;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\ResponseHeaderBag;
 
@@ -24,6 +25,14 @@ abstract class CsvExport implements Export
         $this->params = $params;
     }
 
+    /**
+     * Do anything you want before the export, like modifying the query
+     */
+    public function preExecute(): void
+    {
+    }
+
+    #[\Deprecated('postExecute has been deprecated, as it is implemented as a preExecute. Use preExecute instead', DoctrineDatagrid::VERSION_SYMFONY7)]
     public function postExecute()
     {
         return $this;
@@ -31,6 +40,9 @@ abstract class CsvExport implements Export
 
     public function execute(): static
     {
+        $this->preExecute();
+
+        // postExecute before executing ? Meh.
         $this->postExecute();
 
         $writer = new CsvWriter($this->getCsvWriterOptions());

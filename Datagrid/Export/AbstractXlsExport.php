@@ -6,6 +6,7 @@ use Doctrine\ORM\QueryBuilder;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
+use Spyrit\Bundle\DoctrineDatagridBundle\Datagrid\DoctrineDatagrid;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\ResponseHeaderBag;
 
@@ -34,6 +35,14 @@ abstract class AbstractXlsExport implements Export
         return [$qb->getQuery()->execute()];
     }
 
+    /**
+     * Do anything you want before the export, like modifying the query
+     */
+    public function preExecute(): void
+    {
+    }
+
+    #[\Deprecated('postExecute has been deprecated, as it is implemented as a preExecute. Use preExecute instead', DoctrineDatagrid::VERSION_SYMFONY7)]
     public function postExecute()
     {
         return $this;
@@ -41,6 +50,8 @@ abstract class AbstractXlsExport implements Export
 
     public function execute(): static
     {
+        $this->preExecute();
+
         // postExecute before executing ? Meh.
         $this->postExecute();
 
