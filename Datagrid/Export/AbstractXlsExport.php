@@ -42,7 +42,7 @@ abstract class AbstractXlsExport implements Export
     {
     }
 
-    #[\Deprecated('postExecute has been deprecated, as it is implemented as a preExecute. Use preExecute instead', DoctrineDatagrid::VERSION_SYMFONY7)]
+    #[\Deprecated(message: 'postExecute has been deprecated, as it is implemented as a preExecute. Use preExecute instead', since: DoctrineDatagrid::VERSION_SYMFONY7)]
     public function postExecute()
     {
         return $this;

@@ -25,12 +25,7 @@ class FilterObject
 
     public function __construct(FormFactory $factory, $name, $options = ['csrf_protection' => false])
     {
-        $version = Kernel::VERSION;
-        switch (substr($version, 0, 1)) {
-            case '2': $type = 'form'; break;
-            default: $type = FormType::class;
-        }
-        $this->builder = $factory->createNamedBuilder('filter_'.$name, $type, null, $options);
+        $this->builder = $factory->createNamedBuilder('filter_'.$name, FormType::class, null, $options);
     }
 
     public function add(string $name, mixed $type, array $options = [], $value = null): void

@@ -65,43 +65,6 @@ class TestableDoctrineDatagrid extends DoctrineDatagrid
     }
 }
 
-/* removed DummyEntityManager as unused */
-/*
-    public function getCache(){}
-    public function getClassMetadata($className){}
-    public function getConnection(){}
-    public function getConfiguration(){ return new DoctrineConfig(); }
-    public function isOpen(){ return true; }
-    public function getEventManager(){}
-    public function getExpressionBuilder(){}
-    public function beginTransaction(){}
-    public function transactional($func){}
-    public function commit(){}
-    public function rollback(){}
-    public function createQuery($dql = ''){ return new class($this) extends DoctrineQuery{ public function __construct($em){ parent::__construct($em);} public function getSQL(){ return ''; } protected function _doExecute(){ return 0; } }; }
-    public function createNamedQuery($name){}
-    public function createNativeQuery($sql, \Doctrine\ORM\Query\ResultSetMapping $rsm){}
-    public function createNamedNativeQuery($name){}
-    public function createQueryBuilder(){ return new QueryBuilder($this); }
-    public function flush($entity = null){}
-    public function find($className, $id){ return null; }
-    public function getReference($entityName, $id){ return null; }
-    public function getPartialReference($entityName, $identifier){ return null; }
-    public function clear($entityName = null){}
-    public function close(){}
-    public function persist($object){}
-    public function remove($object){}
-    public function refresh($object){}
-    public function detach($object){}
-    public function merge($object){}
-    public function copy($entity, $deep = false){}
-    public function lock($entity, $lockMode, $lockVersion = null){}
-    public function getEventManager0(){}
-    public function getProxyFactory(){}
-    public function initializeObject($obj){}
-    public function contains($object){ return false; }
-*/
-
 final class QueryBuilderTest extends TestCase
 {
     private function createDatagrid(Request $request, array &$sessionStore, array $params = []): TestableDoctrineDatagrid

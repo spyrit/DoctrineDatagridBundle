@@ -32,7 +32,7 @@ abstract class CsvExport implements Export
     {
     }
 
-    #[\Deprecated(since: DoctrineDatagrid::VERSION_SYMFONY7, message: 'postExecute has been deprecated, as it is implemented as a preExecute. Use preExecute instead')]
+    #[\Deprecated(message: 'postExecute has been deprecated, as it is implemented as a preExecute. Use preExecute instead', since: DoctrineDatagrid::VERSION_SYMFONY7)]
     public function postExecute()
     {
         return $this;

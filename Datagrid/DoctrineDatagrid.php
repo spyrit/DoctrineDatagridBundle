@@ -111,7 +111,7 @@ class DoctrineDatagrid
     /**
      * Options that you can use in your Datagrid methods if you need.
      */
-    protected int $options;
+    protected mixed $options;
 
     /**
      * @var string
@@ -125,7 +125,7 @@ class DoctrineDatagrid
     protected ?string $groupBy = null;
 
     /** @var array<string, class-string> */
-    protected array $exports;
+    protected array $exports = [];
 
     protected bool $shouldFetchJoinCollection = true;
 
@@ -259,7 +259,7 @@ class DoctrineDatagrid
             ->getQuery()
             ->getSingleScalarResult();
 
-        $this->nbPages = ceil($this->nbResults / $this->getMaxPerPage());
+        $this->nbPages = (int) ceil($this->nbResults / $this->getMaxPerPage());
 
         $qb = $this->qb->select(($this->distinct ? 'DISTINCT ' : '') . $this->select)
             ->setFirstResult(($this->getCurrentPage() - 1) * $this->getMaxPerPage())
@@ -423,8 +423,8 @@ class DoctrineDatagrid
                 $this->filterObject->add(
                     $name,
                     $filter['type'],
-                    isset($filter['options']) ? $filter['options'] : [],
-                    isset($filter['value']) ? $filter['value'] : null
+                    $filter['options'] ?? [],
+                    $filter['value'] ?? null
                 );
             }
             $this->configureFilterBuilder($this->filterObject->getBuilder());
@@ -479,9 +479,9 @@ class DoctrineDatagrid
     /**
      * Shortcut.
      */
-    public function getFilterFormView(): FormView
+    public function getFilterFormView(): ?FormView
     {
-        return $this->filterObject->getForm()->createView();
+        return $this->filterObject?->getForm()->createView();
     }
 
     /**
@@ -814,7 +814,7 @@ class DoctrineDatagrid
 
     protected function getRequestedSortColumn(?string $default = null): ?string
     {
-        $requested = Util::validateSortDirection($this->getRequestParams($this->getRequest())->get(self::PARAM1, $default));
+        $requested = $this->getRequestParams($this->getRequest())->get(self::PARAM1, $default);
 
         // if there is a whitelist, ignore everything that is not in it
         if (null !== $this->allowedSorts && !in_array($requested, $this->allowedSorts)) {
@@ -830,7 +830,8 @@ class DoctrineDatagrid
      */
     protected function getRequestedSortOrder(?string $default = null): ?string
     {
-        $requested = Util::validateSortDirection($this->getRequestParams($this->getRequest())->get(self::PARAM2, $default));
+        $dir = $this->getRequestParams($this->getRequest())->get(self::PARAM2, $default);
+        $requested = $dir ? Util::validateSortDirection($dir) : null;
 
         // if there is a whitelist, ignore everything that is not in it
         if (!in_array($requested, self::ALLOWED_SORT_DIRECTIONS, true)) {
