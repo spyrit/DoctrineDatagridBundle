@@ -1,10 +1,10 @@
 {% macro sort(column, label, route, datagrid, extraParams = {}) %}
     {% if datagrid.isSortedColumn(column) %}
-        {% if datagrid.sortedColumnOrder(column) == 'desc' %}
-            {% set order = 'asc' %}
+        {% if datagrid.sortedColumnOrder(column) == 'DESC' %}
+            {% set order = 'ASC' %}
             {% set icon = 'fa-sort-desc fa-sort-down' %}
         {% else %}
-            {% set order = 'desc' %}
+            {% set order = 'DESC' %}
             {% set icon = 'fa-sort-asc fa-sort-up' %}
         {%endif %}
     {% else %}
