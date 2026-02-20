@@ -56,10 +56,7 @@ class DoctrineDatagrid
     public const PARAM1 = 'param1';
     public const PARAM2 = 'param2';
 
-    protected RequestStack $requestStack;
     protected SessionInterface $session;
-    protected FormFactoryInterface $formFactory;
-    protected RouterInterface $router;
 
     /**
      * The query builder that filter the results.
@@ -127,9 +124,8 @@ class DoctrineDatagrid
 
     protected ?string $groupBy = null;
 
-    protected $exports;
-
-    protected $params;
+    /** @var array<string, class-string> */
+    protected array $exports;
 
     protected bool $shouldFetchJoinCollection = true;
 
@@ -141,18 +137,13 @@ class DoctrineDatagrid
 
     public function __construct(
         private readonly EntityManagerInterface $em,
-        RequestStack                            $requestStack,
-        FormFactoryInterface                    $formFactory,
-        RouterInterface                         $router,
-        string                                  $name,
-        array                                   $params = []
+        private readonly RequestStack $requestStack,
+        private readonly FormFactoryInterface $formFactory,
+        private readonly RouterInterface $router,
+        private string $name,
+        private array $params = []
     )
     {
-        $this->requestStack = $requestStack;
-        $this->formFactory = $formFactory;
-        $this->router = $router;
-        $this->name = $name;
-        $this->params = $params;
         $this->session = $requestStack->getSession();
     }
 
@@ -617,7 +608,7 @@ class DoctrineDatagrid
     }
 
     /**
-     * @param Export[] $exports
+     * @param array<string, class-string> $exports
      */
     public function setExports(array $exports): static
     {
@@ -854,7 +845,7 @@ class DoctrineDatagrid
         return $this->getRequestParams($this->getRequest())->get(self::PARAM1, $default);
     }
 
-    protected function getRequestedPage(int $default = null): int
+    protected function getRequestedPage(?int $default = null): int
     {
         $page = $this->getRequestParams($this->getRequest())->getInt(self::PARAM1, $default);
 
@@ -876,7 +867,7 @@ class DoctrineDatagrid
         return $this->getRequestParams($this->getRequest())->get(self::PARAM1, $default);
     }
 
-    protected function getRequestedLimit(int $default = null): int
+    protected function getRequestedLimit(?int $default = null): int
     {
         return $this->getRequestParams($this->getRequest())->get(self::PARAM1, $default);
     }
