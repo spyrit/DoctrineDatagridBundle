@@ -6,7 +6,6 @@ use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Query;
 use Doctrine\ORM\QueryBuilder;
 use Doctrine\ORM\Tools\Pagination\Paginator;
-use Spyrit\Bundle\DoctrineDatagridBundle\Datagrid\Export\Export;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\Form\FormFactoryInterface;
 use Symfony\Component\Form\FormTypeInterface;
@@ -382,7 +381,10 @@ class DoctrineDatagrid
         }
 
         if ($this->filterObject) {
-            $this->filterObject->submit($data);
+            // Prevent submitting twice
+            if (!$this->filterObject->getForm()->isSubmitted()) {
+                $this->filterObject->submit($data);
+            }
             $form = $this->filterObject->getForm();
             $formData = $form->getData();
 
