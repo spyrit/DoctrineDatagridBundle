@@ -276,9 +276,14 @@ class DoctrineDatagrid
         return new Paginator($query, $this->shouldFetchJoinCollection);
     }
 
+    public function getUnorderedQueryBuilder(QueryBuilder $qb): QueryBuilder
+    {
+        return (clone $qb)->resetDQLPart('orderBy');
+    }
+
     protected function createCountQb(QueryBuilder $qb): QueryBuilder
     {
-        return clone $qb;
+        return $this->getUnorderedQueryBuilder($qb);
     }
 
     /*********************************/
