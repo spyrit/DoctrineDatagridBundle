@@ -238,10 +238,15 @@ class DoctrineDatagrid
             ->remove($this->getSessionName().'.'.$name);
     }
 
+    public function getUnorderedQueryBuilder()
+    {
+        return (clone $this->qb)->resetDQLPart('orderBy');
+    }
+
     protected function getQueryResults()
     {
-        $countQb = clone $this->qb;
-        $this->nbResults = $countQb->select('COUNT(DISTINCT '.$this->id.')')
+        $this->nbResults = $this->getUnorderedQueryBuilder()
+            ->select('COUNT(DISTINCT '.$this->id.')')
             ->getQuery()
             ->getSingleScalarResult();
 
