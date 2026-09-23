@@ -675,6 +675,10 @@ class DoctrineDatagrid
 
     public function getAllResults(): mixed
     {
+        if (null === $this->filterObject) {
+            $this->buildForm();
+        }
+
         $this->doSort();
         $this->doFilter();
 
