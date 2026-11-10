@@ -9,136 +9,165 @@ This make it easy to implement and use in both back-end and front-end applicatio
 
 Still skeptical? Let's see how it works!
 
+## Requirements
+
+- PHP 8.2+
+- Symfony 7.4 / 8.x
+- Doctrine ORM 2.20+ / 3.x
+- `phpoffice/phpspreadsheet` (optional) to export to XLSX
+
 ## Installation
 
 ### Get the code
 
 To install this bundle automatically, use Composer:
 
-    composer req spyrit/doctrine-datagrid-bundle
+```bash
+composer require spyrit/doctrine-datagrid-bundle
+```
 
 ### Use it
 
 Create your datagrids:
 
-    <?php
+```php
+<?php
 
-    namespace App\Datagrid;
+namespace App\Datagrid;
 
-    use App\Entity\Video;
-    use Spyrit\Bundle\DoctrineDatagridBundle\Datagrid\DoctrineDatagrid;
-    use Spyrit\Bundle\DoctrineDatagridBundle\Datagrid\DoctrineDatagridFactory;
-    use Symfony\Component\Form\Extension\Core\Type\TextType;
+use App\Entity\Video;
+use Doctrine\ORM\QueryBuilder;
+use Spyrit\Bundle\DoctrineDatagridBundle\Datagrid\DoctrineDatagrid;
+use Spyrit\Bundle\DoctrineDatagridBundle\Datagrid\DoctrineDatagridFactory;
+use Symfony\Component\Form\Extension\Core\Type\TextType;
 
-    class VideoDatagrid
+class VideoDatagrid
+{
+    private DoctrineDatagrid $datagrid;
+
+    public function __construct(DoctrineDatagridFactory $factory)
     {
-        private DoctrineDatagrid $datagrid;
-
-        public function __construct(DoctrineDatagridFactory $factory)
-        {
-            $this->datagrid = $factory
-                ->create('video', ['multi_sort' => false])
-                ->select(['video'])
-                ->id('video.id')
-                ->query(function ($qb) {
-                    return $qb->from(Video::class, 'video');
-                })
-                ->filter('title', TextType::class, [
-                    'attr' => [
-                        'placeholder' => 'Title',
-                    ],
-                    'translation_domain' => false,
-                    'required' => false,
-                ], function ($value, $qb) {
-                    return $qb->andWhere('video.title LIKE :title')
-                        ->setParameter('title', '%'.$value.'%');
-                })
-                ->setDefaultSort(['video.id' => 'desc'])
-                ->setDefaultMaxPerPage(30);
-        }
-
-        public function execute(): DoctrineDatagrid
-        {
-            return $this->datagrid->execute();
-        }
+        $this->datagrid = $factory
+            ->create('video', ['multi_sort' => false])
+            ->select(['video'])
+            ->id('video.id')
+            ->query(fn (QueryBuilder $qb): QueryBuilder => $qb->from(Video::class, 'video'))
+            ->filter('title', TextType::class, [
+                'attr' => [
+                    'placeholder' => 'Title',
+                ],
+                'translation_domain' => false,
+                'required' => false,
+            ], fn (string $value, QueryBuilder $qb): QueryBuilder => $qb
+                ->andWhere('video.title LIKE :title')
+                ->setParameter('title', '%'.$value.'%'))
+            // Restrict the columns a user can sort on (recommended)
+            ->setAllowedSorts(['video.id', 'video.title'])
+            ->setDefaultSort(['video.id' => 'DESC'])
+            ->setDefaultMaxPerPage(30);
     }
+
+    public function execute(): DoctrineDatagrid
+    {
+        return $this->datagrid->execute();
+    }
+}
+```
+
+> Sort directions must be uppercase (`ASC` / `DESC`): lowercase values are deprecated.
 
 Use your datagrids in your controllers:
 
-    <?php
+```php
+<?php
 
-    namespace App\Controller\Admin;
+namespace App\Controller\Admin;
 
-    use App\Datagrid\VideoDatagrid;
-    use Symfony\Component\HttpFoundation\Response;
-    use Symfony\Component\Routing\Annotation\Route;
+use App\Datagrid\VideoDatagrid;
+use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\Routing\Attribute\Route;
 
-    /**
-    * @Route("/video")
-    */
-    class VideoController extends Controller
+#[Route('/video')]
+class VideoController extends AbstractController
+{
+    #[Route('/list', name: 'video_index', methods: ['GET', 'POST'])]
+    public function index(VideoDatagrid $datagrid): Response
     {
-        /**
-         * @Route("/list", name="video_index", methods={"GET","POST"})
-         */
-        public function index(VideoDatagrid $datagrid): Response
-        {
-            return $this->render('video/index.html.twig', [
-                'datagrid' => $datagrid->execute(),
-            ]);
-        }
+        return $this->render('video/index.html.twig', [
+            'datagrid' => $datagrid->execute(),
+        ]);
     }
+}
+```
 
 Render them in your views:
 
-    {% extends 'layout.html.twig' %}
-    {% import '@DoctrineDatagrid/Datagrid/macros.html.twig' as macros %}
+```twig
+{% extends 'layout.html.twig' %}
+{% import '@DoctrineDatagrid/Datagrid/macros.html.twig' as macros %}
 
-    {% set form = datagrid.filterFormView %}
-    {% set route = app.request.attributes.get('_route') %}
+{% set form = datagrid.filterFormView %}
+{% set route = app.request.attributes.get('_route') %}
 
-    {% block body %}
-        <table class="table">
-            <thead>
-                <tr id="filters">
-                    {{ form_start(form) }}
-                    <td>
-                        {{ form_widget(form.title) }}
-                    </td>
-                    <td class="text-right">
-                        <button class="btn btn-primary">{{ 'Filter' }}</button>
-                        <a href="{{ datagrid.resetPath(route) }}" class="btn btn-secondary">{{ 'Reset' }}</a>
-                    </td>
-                    {{ form_end(form) }}
-                </tr>
+{% block body %}
+    <table class="table">
+        <thead>
+            <tr id="filters">
+                {{ form_start(form) }}
+                <td>
+                    {{ form_widget(form.title) }}
+                </td>
+                <td class="text-right">
+                    <button class="btn btn-primary">{{ 'Filter' }}</button>
+                    <a href="{{ datagrid.resetPath(route) }}" class="btn btn-secondary">{{ 'Reset' }}</a>
+                </td>
+                {{ form_end(form) }}
+            </tr>
+            <tr>
+                <th>{{ 'Title' }}</th>
+                <th>{{ 'Description' }}</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for video in datagrid.results %}
                 <tr>
-                    <th>{{ 'Title' }}</th>
-                    <th>{{ 'Description' }}</th>
+                    <td>{{ video.title }}</td>
+                    <td>{{ video.description }}</td>
                 </tr>
-            </thead>
-            <tbody>
-                {% for video in datagrid.results %}
-                    <tr>
-                        <td>{{ video.title }}</td>
-                        <td>{{ video.description }}</td>
-                    </tr>
-                {% else %}
-                    <tr>
-                        <td colspan="2">{{ 'No video' }}</td>
-                    </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-        <div class="row">
-            <div class="col-md-4"></div>
-            <div class="col-md-4">
-                {% include '@DoctrineDatagrid/Datagrid/pagination_info.html.twig' %}
-            </div>
-            <div class="col-md-4">
-                {% include '@DoctrineDatagrid/Datagrid/pagination.html.twig' %}
-            </div>
+            {% else %}
+                <tr>
+                    <td colspan="2">{{ 'No video' }}</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    <div class="row">
+        <div class="col-md-4"></div>
+        <div class="col-md-4">
+            {% include '@DoctrineDatagrid/Datagrid/pagination_info.html.twig' %}
         </div>
-    {% endblock %}
+        <div class="col-md-4">
+            {% include '@DoctrineDatagrid/Datagrid/pagination.html.twig' %}
+        </div>
+    </div>
+{% endblock %}
+```
+
+## Exports
+
+Declare export classes extending `CsvExport` or `AbstractXlsExport` with `setExports(['csv' => BookCsvExport::class])`,
+then call `$datagrid->export('csv')->getResponse()`. Override `preExecute()` to alter the query before the export
+(`postExecute()` is deprecated).
+
+## Development
+
+```bash
+composer install
+composer test      # PHPUnit
+composer phpstan   # static analysis
+composer cs        # coding standards (composer cs-fix to fix them)
+```
 
 ## Credit
 

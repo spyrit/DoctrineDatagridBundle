@@ -1,0 +1,18 @@
+parameters:
+    level: 5
+    paths:
+        - Bridge
+        - Datagrid
+        - DoctrineDatagridBundle.php
+        - Tests
+    tmpDir: var/cache/phpstan
+    reportUnmatchedIgnoredErrors: false
+    ignoreErrors:
+        # phpoffice/phpspreadsheet is an optional dependency (requires ext-gd)
+        -
+            identifier: class.notFound
+            path: Datagrid/Export/AbstractXlsExport.php
+        # compatibility with doctrine/orm 2.x (lowest dependencies)
+        -
+            identifier: function.alreadyNarrowedType
+            path: Tests/OrmTestTrait.php

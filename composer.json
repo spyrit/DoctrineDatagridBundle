@@ -2,7 +2,7 @@
     "name": "spyrit/doctrine-datagrid-bundle",
     "description": "Symfony Datagrid Bundle for Doctrine.",
     "keywords": ["datagrid", "symfony", "doctrine"],
-    "homepage": "https://github.com/spyrit/DoctrineDatagridBundle.git",
+    "homepage": "https://github.com/spyrit/DoctrineDatagridBundle",
     "type": "symfony-bundle",
     "license": "MIT",
     "authors": [
@@ -22,24 +22,45 @@
     },
     "require": {
         "php": "^8.2",
-        "csanquer/colibri-csv": "1.2.*",
-        "doctrine/orm": "^2.2|^3.0",
-        "symfony/form": "^7.0|^8.0",
-        "symfony/http-foundation": "^7.0|^8.0",
-        "symfony/routing": "^7.0|^8.0",
-        "symfony/config": "^7.0|^8.0",
-        "symfony/http-kernel": "^7.0|^8.0",
+        "csanquer/colibri-csv": "^1.2",
+        "doctrine/orm": "^2.20|^3.3",
+        "symfony/config": "^7.4|^8.0",
+        "symfony/dependency-injection": "^7.4|^8.0",
+        "symfony/deprecation-contracts": "^3.5",
+        "symfony/form": "^7.4|^8.0",
+        "symfony/http-foundation": "^7.4|^8.0",
+        "symfony/http-kernel": "^7.4|^8.0",
+        "symfony/routing": "^7.4|^8.0",
         "webmozart/assert": "^2.1.2"
     },
     "require-dev": {
-        "phpunit/phpunit": "^12.0"
+        "friendsofphp/php-cs-fixer": "^3.64",
+        "phpstan/phpstan": "^2.1",
+        "phpunit/phpunit": "^11.5|^12.5",
+        "symfony/cache": "^7.4|^8.0",
+        "symfony/security-csrf": "^7.4|^8.0",
+        "twig/twig": "^3.12"
+    },
+    "suggest": {
+        "phpoffice/phpspreadsheet": "Required to export datagrids to XLSX (AbstractXlsExport)"
+    },
+    "conflict": {
+        "phpoffice/phpspreadsheet": "<1.23"
     },
     "autoload": {
-	    "psr-4": { "Spyrit\\Bundle\\DoctrineDatagridBundle\\": "" }
+        "psr-4": { "Spyrit\\Bundle\\DoctrineDatagridBundle\\": "" },
+        "exclude-from-classmap": ["/Tests/"]
+    },
+    "autoload-dev": {
+        "psr-4": { "Spyrit\\Bundle\\DoctrineDatagridBundle\\Tests\\": "Tests/" }
+    },
+    "scripts": {
+        "test": "phpunit",
+        "phpstan": "phpstan analyse",
+        "cs": "php-cs-fixer fix --dry-run --diff",
+        "cs-fix": "php-cs-fixer fix"
     },
     "config": {
-        "allow-plugins": {
-            "infection/extension-installer": true
-        }
+        "sort-packages": true
     }
 }

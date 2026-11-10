@@ -7,12 +7,13 @@ use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use Spyrit\Bundle\DoctrineDatagridBundle\Datagrid\DoctrineDatagrid;
+use Spyrit\Bundle\DoctrineDatagridBundle\Datagrid\Util;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\ResponseHeaderBag;
 
 abstract class AbstractXlsExport implements Export
 {
-    protected $content;
+    protected ?string $content = null;
 
     protected array $params;
 
@@ -42,18 +43,33 @@ abstract class AbstractXlsExport implements Export
     {
     }
 
+    /**
+     * @deprecated since 7.0, override preExecute() instead
+     */
     #[\Deprecated(message: 'postExecute has been deprecated, as it is implemented as a preExecute. Use preExecute instead', since: DoctrineDatagrid::VERSION_SYMFONY7)]
     public function postExecute()
     {
         return $this;
     }
 
+    /**
+     * Keeps BC for exports still overriding postExecute(), without triggering
+     * a deprecation for the others.
+     */
+    private function callDeprecatedPostExecute(): void
+    {
+        if (self::class === (new \ReflectionMethod($this, 'postExecute'))->getDeclaringClass()->getName()) {
+            return;
+        }
+
+        Util::triggerDeprecation(sprintf('Overriding "%s::postExecute()" is deprecated, override "preExecute()" instead.', self::class), DoctrineDatagrid::VERSION_SYMFONY7);
+        $this->postExecute();
+    }
+
     public function execute(): static
     {
         $this->preExecute();
-
-        // postExecute before executing ? Meh.
-        $this->postExecute();
+        $this->callDeprecatedPostExecute();
 
         if (!class_exists(Spreadsheet::class)) {
             throw new \LogicException('PhpSpreadsheet is required to export to XLSX. Try `composer require phpoffice/phpspreadsheet`');
@@ -80,12 +96,7 @@ abstract class AbstractXlsExport implements Export
             if (isset($headers[$name])) {
                 $col = 1;
                 foreach ($headers[$name] as $value) {
-                    if (method_exists($sheet, 'setCellValueByColumnAndRow')) {
-                        // setCellValueByColumnAndRow is deprecated in PhpSpreadsheet v1.23
-                        $sheet->setCellValueByColumnAndRow($col, $row, $value);
-                    } else {
-                        $sheet->setCellValue([$col, $row], $value);
-                    }
+                    $sheet->setCellValue([$col, $row], $value);
                     ++$col;
                 }
                 ++$row;

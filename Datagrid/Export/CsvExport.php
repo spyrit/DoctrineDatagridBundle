@@ -5,6 +5,7 @@ namespace Spyrit\Bundle\DoctrineDatagridBundle\Datagrid\Export;
 use CSanquer\ColibriCsv\CsvWriter;
 use Doctrine\ORM\QueryBuilder;
 use Spyrit\Bundle\DoctrineDatagridBundle\Datagrid\DoctrineDatagrid;
+use Spyrit\Bundle\DoctrineDatagridBundle\Datagrid\Util;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\ResponseHeaderBag;
 
@@ -13,13 +14,13 @@ use Symfony\Component\HttpFoundation\ResponseHeaderBag;
  */
 abstract class CsvExport implements Export
 {
-    protected $content;
+    protected ?string $content = null;
 
     protected array $params;
 
     protected QueryBuilder $qb;
 
-    public function __construct($qb, $params)
+    public function __construct(QueryBuilder $qb, array $params)
     {
         $this->qb = $qb;
         $this->params = $params;
@@ -32,18 +33,33 @@ abstract class CsvExport implements Export
     {
     }
 
+    /**
+     * @deprecated since 7.0, override preExecute() instead
+     */
     #[\Deprecated(message: 'postExecute has been deprecated, as it is implemented as a preExecute. Use preExecute instead', since: DoctrineDatagrid::VERSION_SYMFONY7)]
     public function postExecute()
     {
         return $this;
     }
 
+    /**
+     * Keeps BC for exports still overriding postExecute(), without triggering
+     * a deprecation for the others.
+     */
+    private function callDeprecatedPostExecute(): void
+    {
+        if (self::class === (new \ReflectionMethod($this, 'postExecute'))->getDeclaringClass()->getName()) {
+            return;
+        }
+
+        Util::triggerDeprecation(sprintf('Overriding "%s::postExecute()" is deprecated, override "preExecute()" instead.', self::class), DoctrineDatagrid::VERSION_SYMFONY7);
+        $this->postExecute();
+    }
+
     public function execute(): static
     {
         $this->preExecute();
-
-        // postExecute before executing ? Meh.
-        $this->postExecute();
+        $this->callDeprecatedPostExecute();
 
         $writer = new CsvWriter($this->getCsvWriterOptions());
         $writer->createTempStream();
@@ -79,7 +95,7 @@ abstract class CsvExport implements Export
         $response->headers->set('Expires', '0');
         $response->headers->set('Cache-Control', 'must-revalidate, post-check=0, pre-check=0');
         $response->headers->set('Pragma', 'public');
-        $response->headers->set('Content-Length', strlen($this->content));
+        $response->headers->set('Content-Length', (string) strlen($this->content));
         $response->setCharset('UTF-8');
 
         return $response;

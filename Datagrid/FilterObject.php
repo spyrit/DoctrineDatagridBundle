@@ -4,7 +4,7 @@ namespace Spyrit\Bundle\DoctrineDatagridBundle\Datagrid;
 
 use Symfony\Component\Form\Extension\Core\Type\FormType;
 use Symfony\Component\Form\FormBuilderInterface;
-use Symfony\Component\Form\FormFactory;
+use Symfony\Component\Form\FormFactoryInterface;
 use Symfony\Component\Form\FormInterface;
 
 /**
@@ -20,9 +20,9 @@ class FilterObject
 
     protected FormBuilderInterface $builder;
 
-    protected $form;
+    protected ?FormInterface $form = null;
 
-    public function __construct(FormFactory $factory, $name, $options = ['csrf_protection' => false])
+    public function __construct(FormFactoryInterface $factory, string $name, array $options = ['csrf_protection' => false])
     {
         $this->builder = $factory->createNamedBuilder('filter_'.$name, FormType::class, null, $options);
     }
@@ -62,7 +62,7 @@ class FilterObject
         return $this->form;
     }
 
-    public function getType($field): mixed
+    public function getType(mixed $field): mixed
     {
         return $this->types[$field] ?? null;
     }
