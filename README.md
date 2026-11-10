@@ -160,6 +160,18 @@ Declare export classes extending `CsvExport` or `AbstractXlsExport` with `setExp
 then call `$datagrid->export('csv')->getResponse()`. Override `preExecute()` to alter the query before the export
 (`postExecute()` is deprecated).
 
+CSV options can be given with the `csvWriter` parameter, e.g.
+`$datagrid->export('csv', ['csvWriter' => ['encoding' => 'UTF-8', 'delimiter' => ',', 'bom' => true]])`.
+Available options (same as the former *Colibri CSV* library, Excel-friendly defaults):
+`delimiter` (`;`), `enclosure` (`"`), `enclosing_mode` (`minimal`|`all`|`nonnumeric`), `encoding` (`CP1252`),
+`eol` (`windows`|`unix`|`mac`), `escape` (`\`), `escape_double` (`true`), `bom` (`false`),
+`translit` (`translit`|`ignore`|`null`), `first_row_header` (`false`), `trim` (`false`).
+
+## Batch actions (JavaScript)
+
+`Resources/public/js/jquery.batch.js` (published with `assets:install`) only requires jQuery
+(and Bootstrap popovers for the "select all" feature): the *jquery.cookie* plugin is no longer needed.
+
 ## Development
 
 ```bash
@@ -173,5 +185,5 @@ composer cs        # coding standards (composer cs-fix to fix them)
 
 Our special thanks go to ...
 
-- Charles SANQUER for its fork of the *LightCSV* library : *Colibri CSV* used in the export feature.
+- Charles SANQUER for its fork of the *LightCSV* library : *Colibri CSV*, which inspired the CSV writer of the export feature.
 - Subosito for its standalone *Inflector* [class](http://subosito.com/inflector-in-symfony-2/)  transformed in a service for our needs.

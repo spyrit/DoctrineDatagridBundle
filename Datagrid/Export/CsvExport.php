@@ -2,7 +2,6 @@
 
 namespace Spyrit\Bundle\DoctrineDatagridBundle\Datagrid\Export;
 
-use CSanquer\ColibriCsv\CsvWriter;
 use Doctrine\ORM\QueryBuilder;
 use Spyrit\Bundle\DoctrineDatagridBundle\Datagrid\DoctrineDatagrid;
 use Spyrit\Bundle\DoctrineDatagridBundle\Datagrid\Util;
@@ -62,7 +61,6 @@ abstract class CsvExport implements Export
         $this->callDeprecatedPostExecute();
 
         $writer = new CsvWriter($this->getCsvWriterOptions());
-        $writer->createTempStream();
 
         if ($this->getHeader()) {
             $writer->writeRow($this->getHeader());
@@ -74,8 +72,7 @@ abstract class CsvExport implements Export
             $writer->writeRow($this->getRow($result));
         }
 
-        $this->content = $writer->getFileContent();
-        $writer->close();
+        $this->content = $writer->getContent();
 
         return $this;
     }
@@ -110,6 +107,11 @@ abstract class CsvExport implements Export
         return ';';
     }
 
+    /**
+     * Options of the CSV writer, from the "csvWriter" export parameter.
+     *
+     * @see CsvWriter::__construct()
+     */
     protected function getCsvWriterOptions(): array
     {
         if (isset($this->params['csvWriter'])) {
