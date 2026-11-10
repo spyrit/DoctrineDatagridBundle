@@ -24,6 +24,10 @@ trait OrmTestTrait
 
         if (\PHP_VERSION_ID >= 80400 && method_exists($config, 'enableNativeLazyObjects')) {
             $config->enableNativeLazyObjects(true);
+        } else {
+            // Without native lazy objects (PHP < 8.4), Doctrine generates proxy classes
+            $config->setProxyDir(sys_get_temp_dir().'/doctrine-datagrid-bundle-proxies');
+            $config->setProxyNamespace('DoctrineDatagridBundleProxies');
         }
 
         $connection = DriverManager::getConnection(['driver' => 'pdo_sqlite', 'memory' => true], $config);
