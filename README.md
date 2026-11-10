@@ -156,9 +156,55 @@ Render them in your views:
 
 ## Exports
 
-Declare export classes extending `CsvExport` or `AbstractXlsExport` with `setExports(['csv' => BookCsvExport::class])`,
-then call `$datagrid->export('csv')->getResponse()`. Override `preExecute()` to alter the query before the export
-(`postExecute()` is deprecated).
+Declare export classes with `setExports(['csv' => BookCsvExport::class])`, then call
+`$datagrid->export('csv')->getResponse()`. Override `preExecute()` to alter the query before the export
+(`postExecute()` is deprecated). Available base classes:
+
+- `CsvExport`: CSV, no dependency;
+- `AbstractXlsExport`: XLSX (requires `phpoffice/phpspreadsheet`);
+- `AbstractSpreadsheetExport`: any format supported by PhpSpreadsheet (ODS, HTML, PDF...), by providing the writer
+  and the content type;
+- `AbstractExport`: any other format, by implementing `generateContent()` and `getContentType()`.
+
+```php
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Writer\IWriter;
+use PhpOffice\PhpSpreadsheet\Writer\Ods;
+use Spyrit\Bundle\DoctrineDatagridBundle\Datagrid\Export\AbstractSpreadsheetExport;
+
+class BookOdsExport extends AbstractSpreadsheetExport
+{
+    public function createWriter(Spreadsheet $spreadsheet): IWriter
+    {
+        return new Ods($spreadsheet);
+    }
+
+    public function getContentType(): string
+    {
+        return 'application/vnd.oasis.opendocument.spreadsheet';
+    }
+
+    public function getFilename(): string
+    {
+        return 'books.ods';
+    }
+
+    public function getHeader(): array
+    {
+        return [['Title', 'Genre']];
+    }
+
+    public function getRow($book): array
+    {
+        return [$book->getTitle(), $book->getGenre()];
+    }
+}
+```
+
+Other PhpSpreadsheet writers: `Html` (`text/html`, only the first sheet unless `writeAllSheets()` is called),
+`Pdf\Dompdf`, `Pdf\Tcpdf` or `Pdf\Mpdf` (`application/pdf`). The PDF writers need an extra library that this
+bundle does not require: check its license before choosing one (`mpdf/mpdf` is GPL-2.0, `dompdf/dompdf` LGPL-2.1,
+`tecnickcom/tcpdf` LGPL-3.0). HTML and PDF rendering are slow and memory-hungry on large datagrids.
 
 CSV options can be given with the `csvWriter` parameter, e.g.
 `$datagrid->export('csv', ['csvWriter' => ['encoding' => 'UTF-8', 'delimiter' => ',', 'bom' => true]])`.

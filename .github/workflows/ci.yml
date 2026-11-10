@@ -22,9 +22,10 @@ jobs:
                     # Symfony 7.4
                     - php: '8.3'
                       dependencies: highest
-                    # Symfony 8
+                    # Symfony 8, with the optional PhpSpreadsheet exports
                     - php: '8.4'
                       dependencies: highest
+                      spreadsheet: true
                     - php: '8.5'
                       dependencies: highest
         steps:
@@ -33,8 +34,12 @@ jobs:
             - uses: shivammathur/setup-php@v2
               with:
                   php-version: ${{ matrix.php }}
-                  extensions: pdo_sqlite
+                  extensions: pdo_sqlite, gd, zip
                   coverage: none
+
+            - name: Require PhpSpreadsheet
+              if: ${{ matrix.spreadsheet }}
+              run: composer require --dev --no-update phpoffice/phpspreadsheet
 
             - uses: ramsey/composer-install@v3
               with:

@@ -10,8 +10,14 @@ parameters:
     ignoreErrors:
         # phpoffice/phpspreadsheet is an optional dependency (requires ext-gd)
         -
-            identifier: class.notFound
-            path: Datagrid/Export/AbstractXlsExport.php
+            identifiers:
+                - class.notFound
+                - return.type
+            paths:
+                - Datagrid/Export/AbstractSpreadsheetExport.php
+                - Datagrid/Export/AbstractXlsExport.php
+                - Tests/Fixtures/Export/*
+                - Tests/Export/ExportTest.php
         # compatibility with doctrine/orm 2.x (lowest dependencies)
         -
             identifier: function.alreadyNarrowedType

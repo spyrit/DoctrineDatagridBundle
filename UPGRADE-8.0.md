@@ -20,6 +20,16 @@ for every `null` cell. `CsvExport` now uses the bundle's own
 - A cell value must be a scalar, `null` or a `\Stringable` object: other values (e.g. `\DateTimeInterface`)
   now throw an `\InvalidArgumentException`. Format them in `getRow()`.
 
+## Exports
+
+`CsvExport` and `AbstractXlsExport` now share a new `AbstractExport` base class (common `getResponse()`), and
+`AbstractXlsExport` extends the new `AbstractSpreadsheetExport`, which accepts any PhpSpreadsheet writer
+(ODS, HTML, PDF...). Existing exports keep working unchanged (same content and HTTP headers), except:
+
+- XLSX exports no longer contain an extra empty column after the last header.
+- If your export already defines a `getContentType()`, `generateContent()` or `createWriter()` method,
+  check that its signature is compatible with the new base classes.
+
 ## Exports: `postExecute()`
 
 `postExecute()` was already deprecated since 7.0. It is now only called when an export overrides it,
