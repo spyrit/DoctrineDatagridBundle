@@ -11,7 +11,7 @@ if (is_file($autoload)) {
 } elseif (is_file($composerAutoload)) {
     $loader = include $composerAutoload;
 } else {
-    die('Unable to find autoload.php file, please use composer to load dependencies:
+    exit('Unable to find autoload.php file, please use composer to load dependencies:
 
 wget http://getcomposer.org/composer.phar
 php composer.phar install

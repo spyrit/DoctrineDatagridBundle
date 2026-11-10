@@ -36,7 +36,7 @@ abstract class AbstractXlsExport implements Export
     }
 
     /**
-     * Do anything you want before the export, like modifying the query
+     * Do anything you want before the export, like modifying the query.
      */
     public function preExecute(): void
     {

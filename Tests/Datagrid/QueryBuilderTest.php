@@ -2,17 +2,15 @@
 
 namespace Spyrit\Bundle\DoctrineDatagridBundle\Tests\Datagrid;
 
-use Doctrine\ORM\AbstractQuery;
-use Doctrine\ORM\EntityManagerInterface as DoctrineEm;
-use Doctrine\ORM\Query as DoctrineQuery;
-use Doctrine\ORM\Configuration as DoctrineConfig;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\QueryBuilder;
 use Doctrine\ORM\Tools\Pagination\Paginator as DoctrinePaginator;
 
 class MinimalPaginator
 {
-    public function __construct(public bool $fetchJoin) {}
+    public function __construct(public bool $fetchJoin)
+    {
+    }
 }
 use PHPUnit\Framework\TestCase;
 use Spyrit\Bundle\DoctrineDatagridBundle\Datagrid\DoctrineDatagrid;
@@ -132,6 +130,7 @@ final class QueryBuilderTest extends TestCase
             $called = true;
             // developer callback may configure and must return a QB
             $this->assertSame($qb, $passedQb);
+
             return $passedQb;
         });
 
@@ -175,7 +174,10 @@ final class QueryBuilderTest extends TestCase
 
         // For count() path, return a tiny stub exposing only getSingleScalarResult
         $countQuery = new class {
-            public function getSingleScalarResult() { return 123; }
+            public function getSingleScalarResult()
+            {
+                return 123;
+            }
         };
 
         // Only one getQuery() call in this safe path
@@ -217,7 +219,10 @@ final class QueryBuilderTest extends TestCase
         $qb->expects($this->once())->method('setMaxResults')->with(50)->willReturn($qb);
 
         $countQuery = new class {
-            public function getSingleScalarResult() { return 200; }
+            public function getSingleScalarResult()
+            {
+                return 200;
+            }
         };
 
         $qb->expects($this->once())
@@ -254,7 +259,10 @@ final class QueryBuilderTest extends TestCase
         $qb->method('orderBy')->willReturn($qb);
 
         $countQuery = new class {
-            public function getSingleScalarResult() { return 0; }
+            public function getSingleScalarResult()
+            {
+                return 0;
+            }
         };
 
         $qb->expects($this->once())
@@ -280,7 +288,12 @@ final class QueryBuilderTest extends TestCase
         $qb2->method('setFirstResult')->willReturn($qb2);
         $qb2->method('setMaxResults')->willReturn($qb2);
         $qb2->method('orderBy')->willReturn($qb2);
-        $countQuery2 = new class { public function getSingleScalarResult() { return 0; } };
+        $countQuery2 = new class {
+            public function getSingleScalarResult()
+            {
+                return 0;
+            }
+        };
         $qb2->expects($this->once())->method('getQuery')->willReturn($countQuery2);
 
         $dg2 = $this->createDatagrid(new Request(), $store);

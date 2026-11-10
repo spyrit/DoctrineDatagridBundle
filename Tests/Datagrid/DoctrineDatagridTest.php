@@ -18,7 +18,7 @@ final class DoctrineDatagridTest extends TestCase
     {
         $em = $this->createMock(EntityManagerInterface::class);
         $formFactory = $this->createMock(FormFactoryInterface::class);
-        $router = $router ?? $this->createMock(RouterInterface::class);
+        $router ??= $this->createMock(RouterInterface::class);
 
         // Session mock with in-memory storage
         $session = $this->createMock(SessionInterface::class);
@@ -158,8 +158,15 @@ final class DoctrineDatagridTest extends TestCase
 
         // Anonymous subclass to provide default/appendable columns
         $dg = new class(...$this->extractCtorArgs($request, $store)) extends DoctrineDatagrid {
-            public function getDefaultColumns(): array { return ['id' => 'ID', 'name' => 'Name']; }
-            public function getAppendableColumns(): array { return ['email' => 'Email', 'country' => 'Country']; }
+            public function getDefaultColumns(): array
+            {
+                return ['id' => 'ID', 'name' => 'Name'];
+            }
+
+            public function getAppendableColumns(): array
+            {
+                return ['email' => 'Email', 'country' => 'Country'];
+            }
         };
 
         // When nothing stored in session, current columns are defaults, so available appendables exclude defaults
@@ -224,6 +231,7 @@ final class DoctrineDatagridTest extends TestCase
     private function extractCtorArgs(Request $request, array &$sessionStore): array
     {
         [$em, $requestStack, $formFactory, $router] = $this->extractRawServices($request, $sessionStore);
+
         return [$em, $requestStack, $formFactory, $router, 'dg', []];
     }
 }

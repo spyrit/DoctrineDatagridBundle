@@ -3,10 +3,9 @@
 namespace Spyrit\Bundle\DoctrineDatagridBundle\Datagrid;
 
 use Symfony\Component\Form\Extension\Core\Type\FormType;
+use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\Form\FormFactory;
 use Symfony\Component\Form\FormInterface;
-use Symfony\Component\HttpKernel\Kernel;
-use Symfony\Component\Form\FormBuilderInterface;
 
 /**
  * @author Maxime CORSON <maxime.corson@spyrit.net>
