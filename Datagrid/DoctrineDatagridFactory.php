@@ -15,11 +15,11 @@ class DoctrineDatagridFactory
     /**
      * Just a simple constructor.
      */
-     public function __construct(
-         private EntityManagerInterface $em,
-         private RequestStack $requestStack,
-         private FormFactoryInterface $formFactory,
-         private RouterInterface $router
+    public function __construct(
+        private EntityManagerInterface $em,
+        private RequestStack $requestStack,
+        private FormFactoryInterface $formFactory,
+        private RouterInterface $router
     ) {
     }
 

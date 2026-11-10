@@ -6,224 +6,114 @@ use Doctrine\ORM\EntityManagerInterface;
 use PHPUnit\Framework\TestCase;
 use Spyrit\Bundle\DoctrineDatagridBundle\Datagrid\DoctrineDatagrid;
 use Spyrit\Bundle\DoctrineDatagridBundle\Datagrid\DoctrineDatagridFactory;
-use Symfony\Component\Form\FormFactoryInterface;
+use Spyrit\Bundle\DoctrineDatagridBundle\Tests\DatagridTestTrait;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
-use Symfony\Component\HttpFoundation\Session\SessionInterface;
 use Symfony\Component\Routing\RouterInterface;
 
 final class DoctrineDatagridTest extends TestCase
 {
-    private function createDatagrid(Request $request, array &$sessionStore, array $params = [], ?RouterInterface $router = null): DoctrineDatagrid
-    {
-        $em = $this->createMock(EntityManagerInterface::class);
-        $formFactory = $this->createMock(FormFactoryInterface::class);
-        $router = $router ?? $this->createMock(RouterInterface::class);
-
-        // Session mock with in-memory storage
-        $session = $this->createMock(SessionInterface::class);
-        $session->method('get')->willReturnCallback(function (string $name, $default = null) use (&$sessionStore) {
-            return $sessionStore[$name] ?? $default;
-        });
-        $session->method('set')->willReturnCallback(function (string $name, $value) use (&$sessionStore) {
-            $sessionStore[$name] = $value;
-        });
-        $session->method('remove')->willReturnCallback(function (string $name) use (&$sessionStore) {
-            unset($sessionStore[$name]);
-        });
-
-        // Attach session to request
-        $request->setSession($session);
-
-        // RequestStack mock that provides current request and direct session access
-        $requestStack = $this->getMockBuilder(RequestStack::class)
-            ->onlyMethods(['getCurrentRequest', 'getSession'])
-            ->getMock();
-        $requestStack->method('getCurrentRequest')->willReturn($request);
-        $requestStack->method('getSession')->willReturn($session);
-
-        return new DoctrineDatagrid($em, $requestStack, $formFactory, $router, 'dg', $params);
-    }
+    use DatagridTestTrait;
 
     public function testGetSessionName(): void
     {
-        $request = new Request();
-        $store = [];
-        $dg = $this->createDatagrid($request, $store);
+        $this->assertSame('datagrid.dg', $this->createDatagrid()->getSessionName());
+    }
+
+    public function testConstructionDoesNotRequireASession(): void
+    {
+        // e.g. a datagrid built from a console command, before any request is handled
+        $dg = new DoctrineDatagrid(
+            $this->createStub(EntityManagerInterface::class),
+            new RequestStack(),
+            $this->createFormFactory(),
+            $this->createStub(RouterInterface::class),
+            'dg',
+        );
+
         $this->assertSame('datagrid.dg', $dg->getSessionName());
     }
 
     public function testRoutingHelpersBuildExpectedParameters(): void
     {
-        $request = new Request();
-        $store = [];
+        $generated = [];
+        $router = $this->createStub(RouterInterface::class);
+        $router->method('generate')->willReturnCallback(function (string $route, array $params) use (&$generated): string {
+            $generated[] = $params;
 
-        $router = $this->createMock(RouterInterface::class);
-        // Assert parameters for pagination
-        $router->expects($this->atLeastOnce())
-            ->method('generate')
-            ->with(
-                $this->anything(),
-                $this->callback(function (array $params) {
-                    // Accept any route name, just validate mandatory params exist
-                    return isset($params['action'], $params['datagrid']);
-                })
-            )
-            ->willReturn('/ok');
+            return '/'.$route;
+        });
 
-        $dg = $this->createDatagrid($request, $store, [], $router);
-        $this->assertSame('/ok', $dg->getPaginationPath('route_name', 2));
-        $this->assertSame('/ok', $dg->getResetPath('route_name'));
-        $this->assertSame('/ok', $dg->getSortPath('route_name', 'col', 'asc'));
-        $this->assertSame('/ok', $dg->getRemoveSortPath('route_name', 'col'));
-    }
+        $dg = $this->createDatagrid(router: $router);
 
-    public function testDefaultSortStateFromConfiguration(): void
-    {
-        $request = new Request();
-        $store = [];
-        $dg = $this->createDatagrid($request, $store);
+        $this->assertSame('/books', $dg->getPaginationPath('books', 2, ['foo' => 'bar']));
+        $dg->getResetPath('books');
+        $dg->getSortPath('books', 'b.title', 'DESC');
+        $dg->getRemoveSortPath('books', 'b.title');
+        $dg->getNewColumnPath('books', 'email', 'name');
+        $dg->getRemoveColumnPath('books', 'email');
+        $dg->getMaxPerPagePath('books', 50);
 
-        $dg->setDefaultSort(['foo' => 'asc']);
-
-        $this->assertTrue($dg->isSortedColumn('foo'));
-        $this->assertSame('asc', $dg->getSortedColumnOrder('foo'));
-        $this->assertSame(0, $dg->getSortedColumnPriority('foo'));
-        $this->assertSame(1, $dg->getSortCount());
-    }
-
-    public function testUpdateSortWithWhitelist(): void
-    {
-        // Prepare a sort request for column "bar" desc
-        $request = new Request([
-            'action' => 'sort',
-            'datagrid' => 'dg',
-            'param1' => 'bar',
-            'param2' => 'desc',
-        ]);
-        $store = [];
-        $dg = $this->createDatagrid($request, $store, ['multi_sort' => true]);
-        $dg->setDefaultSort(['foo' => 'asc']);
-        $dg->setAllowedSorts(['bar', 'baz']);
-
-        $dg->updateSort();
-
-        $this->assertTrue($dg->isSortedColumn('bar'));
-        $this->assertSame('desc', $dg->getSortedColumnOrder('bar'));
-        // Multi sort keeps previous defaults too
-        $this->assertSame(2, $dg->getSortCount());
-    }
-
-    public function testRemoveSort(): void
-    {
-        // Start with two sorts stored in session
-        $request = new Request([
-            'action' => 'remove_sort',
-            'datagrid' => 'dg',
-            'param1' => 'bar',
-        ]);
-        $store = [];
-        $dg = $this->createDatagrid($request, $store);
-        // prime session with sorts
-        // Using public API: set session "sort" by calling setDefaultSort then updateSort twice
-        $dg->setDefaultSort(['foo' => 'asc', 'bar' => 'desc']);
-
-        $this->assertSame(2, $dg->getSortCount());
-        $dg->removeSort();
-        $this->assertSame(1, $dg->getSortCount());
-        $this->assertFalse($dg->isSortedColumn('bar'));
-    }
-
-    public function testPaginationStateUsingSession(): void
-    {
-        $request = new Request();
-        $store = [];
-        $dg = $this->createDatagrid($request, $store);
-
-        $this->assertSame(1, $dg->getCurrentPage());
-        $dg->setCurrentPage(3);
-        $this->assertSame(3, $dg->getCurrentPage());
-
-        $dg->setDefaultMaxPerPage(30);
-        $this->assertSame(30, $dg->getMaxPerPage());
-        $dg->setMaxPerPage(50);
-        $this->assertSame(50, $dg->getMaxPerPage());
-        $this->assertSame([15, 30, 50], $dg->getAvailableMaxPerPage());
+        $this->assertSame([
+            ['action' => 'page', 'datagrid' => 'dg', 'param1' => 2, 'foo' => 'bar'],
+            ['action' => 'reset', 'datagrid' => 'dg'],
+            ['action' => 'sort', 'datagrid' => 'dg', 'param1' => 'b.title', 'param2' => 'DESC'],
+            ['action' => 'remove-sort', 'datagrid' => 'dg', 'param1' => 'b.title'],
+            ['action' => 'add-column', 'datagrid' => 'dg', 'param1' => 'email', 'param2' => 'name'],
+            ['action' => 'remove-column', 'datagrid' => 'dg', 'param1' => 'email'],
+            ['action' => 'limit', 'datagrid' => 'dg', 'param1' => 50],
+        ], $generated);
     }
 
     public function testDynamicColumnsAvailability(): void
     {
-        $request = new Request();
-        $store = [];
+        $dg = $this->createDatagrid(class: ColumnsDatagrid::class);
 
-        // Anonymous subclass to provide default/appendable columns
-        $dg = new class(...$this->extractCtorArgs($request, $store)) extends DoctrineDatagrid {
-            public function getDefaultColumns(): array { return ['id' => 'ID', 'name' => 'Name']; }
-            public function getAppendableColumns(): array { return ['email' => 'Email', 'country' => 'Country']; }
-        };
-
-        // When nothing stored in session, current columns are defaults, so available appendables exclude defaults
-        $available = $dg->getAvailableAppendableColumns();
-        $this->assertArrayHasKey('email', $available);
-        $this->assertArrayHasKey('country', $available);
-        $this->assertArrayNotHasKey('id', $available);
-        $this->assertArrayNotHasKey('name', $available);
+        $this->assertSame(['id' => 'ID', 'name' => 'Name'], $dg->getColumns());
+        $this->assertSame(['email' => 'Email', 'country' => 'Country'], $dg->getAvailableAppendableColumns());
     }
 
     public function testFactoryCreatesDatagridWithGivenName(): void
     {
-        $request = new Request();
-        $store = [];
+        $factory = new DoctrineDatagridFactory(
+            $this->createStub(EntityManagerInterface::class),
+            $this->createRequestStack(new Request()),
+            $this->createFormFactory(),
+            $this->createStub(RouterInterface::class),
+        );
 
-        [$em, $requestStack, $formFactory, $router] = $this->extractRawServices($request, $store);
-        $factory = new DoctrineDatagridFactory($em, $requestStack, $formFactory, $router);
-        $dg = $factory->create('custom');
-
-        $this->assertInstanceOf(DoctrineDatagrid::class, $dg);
-        $this->assertSame('datagrid.custom', $dg->getSessionName());
+        $this->assertSame('datagrid.custom', $factory->create('custom')->getSessionName());
     }
 
-    /**
-     * Helper to reuse the same service mocks as createDatagrid but return raw args for subclassing.
-     *
-     * @return array{0: EntityManagerInterface, 1: RequestStack, 2: FormFactoryInterface, 3: RouterInterface}
-     */
-    private function extractRawServices(Request $request, array &$sessionStore): array
+    public function testBatchHelpers(): void
     {
-        $em = $this->createMock(EntityManagerInterface::class);
-        $formFactory = $this->createMock(FormFactoryInterface::class);
-        $router = $this->createMock(RouterInterface::class);
+        $request = new Request(cookies: ['dg_batch' => json_encode(['type' => 'include', 'checked' => [1, 3]])]);
+        $dg = $this->createDatagrid($request);
 
-        $session = $this->createMock(SessionInterface::class);
-        $session->method('get')->willReturnCallback(function (string $name, $default = null) use (&$sessionStore) {
-            return $sessionStore[$name] ?? $default;
-        });
-        $session->method('set')->willReturnCallback(function (string $name, $value) use (&$sessionStore) {
-            $sessionStore[$name] = $value;
-        });
-        $session->method('remove')->willReturnCallback(function (string $name) use (&$sessionStore) {
-            unset($sessionStore[$name]);
-        });
-
-        $request->setSession($session);
-
-        $requestStack = $this->getMockBuilder(RequestStack::class)
-            ->onlyMethods(['getCurrentRequest', 'getSession'])
-            ->getMock();
-        $requestStack->method('getCurrentRequest')->willReturn($request);
-        $requestStack->method('getSession')->willReturn($session);
-
-        return [$em, $requestStack, $formFactory, $router];
+        $this->assertTrue($dg->isBatchChecked(1));
+        $this->assertFalse($dg->isBatchChecked(2));
+        $this->assertSame(['type' => 'include', 'checked' => [1, 3]], $dg->getBatchData());
     }
 
-    /**
-     * Same as extractRawServices but returns spreadable constructor args for DoctrineDatagrid.
-     *
-     * @return array{0: EntityManagerInterface, 1: RequestStack, 2: FormFactoryInterface, 3: RouterInterface, 4: string, 5: array}
-     */
-    private function extractCtorArgs(Request $request, array &$sessionStore): array
+    public function testBatchHelpersWithoutCookie(): void
     {
-        [$em, $requestStack, $formFactory, $router] = $this->extractRawServices($request, $sessionStore);
-        return [$em, $requestStack, $formFactory, $router, 'dg', []];
+        $dg = $this->createDatagrid();
+
+        $this->assertSame([], $dg->getBatchData());
+        $this->assertFalse($dg->isBatchChecked(1));
+        $this->assertFalse($dg->hasCheckedBatch());
+    }
+}
+
+class ColumnsDatagrid extends DoctrineDatagrid
+{
+    public function getDefaultColumns(): array
+    {
+        return ['id' => 'ID', 'name' => 'Name'];
+    }
+
+    public function getAppendableColumns(): array
+    {
+        return ['email' => 'Email', 'country' => 'Country'];
     }
 }

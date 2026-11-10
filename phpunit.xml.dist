@@ -1,22 +1,29 @@
 <?xml version="1.0" encoding="UTF-8"?>
-
-<phpunit colors="false" bootstrap="vendor/autoload.php">
+<phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:noNamespaceSchemaLocation="vendor/phpunit/phpunit/phpunit.xsd"
+         bootstrap="vendor/autoload.php"
+         colors="true"
+         cacheDirectory=".phpunit.cache"
+         failOnDeprecation="true"
+         failOnNotice="true"
+         failOnWarning="true"
+         displayDetailsOnTestsThatTriggerDeprecations="true"
+         displayDetailsOnTestsThatTriggerNotices="true"
+         displayDetailsOnTestsThatTriggerWarnings="true"
+         displayDetailsOnPhpunitDeprecations="true">
     <testsuites>
-        <testsuite name="SpyritPropelDatagridBundle test suite">
-            <directory suffix="Test.php">./Tests/</directory>
+        <testsuite name="DoctrineDatagridBundle test suite">
+            <directory>./Tests/</directory>
         </testsuite>
     </testsuites>
-    <php>
-        <server name="KERNEL_DIR" value="./Tests/Fixtures/App/app" />
-    </php>
-    <filter>
-        <whitelist>
+    <source ignoreSuppressionOfDeprecations="true" ignoreIndirectDeprecations="true">
+        <include>
             <directory>./</directory>
-            <exclude>
-                <directory>./Resources</directory>
-                <directory>./Tests</directory>
-                <directory>./vendor</directory>
-            </exclude>
-        </whitelist>
-    </filter>
+        </include>
+        <exclude>
+            <directory>./Resources</directory>
+            <directory>./Tests</directory>
+            <directory>./vendor</directory>
+        </exclude>
+    </source>
 </phpunit>

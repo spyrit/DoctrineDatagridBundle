@@ -1,0 +1,65 @@
+name: CI
+
+on:
+    push:
+        branches: [master]
+    pull_request:
+
+permissions:
+    contents: read
+
+jobs:
+    tests:
+        name: PHP ${{ matrix.php }} - ${{ matrix.dependencies }} deps
+        runs-on: ubuntu-latest
+        strategy:
+            fail-fast: false
+            matrix:
+                include:
+                    # Symfony 7.4, Doctrine ORM 2.20, PHPUnit 11
+                    - php: '8.2'
+                      dependencies: lowest
+                    # Symfony 7.4
+                    - php: '8.3'
+                      dependencies: highest
+                    # Symfony 8, with the optional PhpSpreadsheet exports
+                    - php: '8.4'
+                      dependencies: highest
+                      spreadsheet: true
+                    - php: '8.5'
+                      dependencies: highest
+        steps:
+            - uses: actions/checkout@v4
+
+            - uses: shivammathur/setup-php@v2
+              with:
+                  php-version: ${{ matrix.php }}
+                  extensions: pdo_sqlite, gd, zip
+                  coverage: none
+
+            - name: Require PhpSpreadsheet
+              if: ${{ matrix.spreadsheet }}
+              run: composer require --dev --no-update phpoffice/phpspreadsheet
+
+            - uses: ramsey/composer-install@v3
+              with:
+                  dependency-versions: ${{ matrix.dependencies }}
+
+            - run: vendor/bin/phpunit
+
+    quality:
+        name: PHPStan & PHP CS Fixer
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v4
+
+            - uses: shivammathur/setup-php@v2
+              with:
+                  php-version: '8.2'
+                  coverage: none
+
+            - uses: ramsey/composer-install@v3
+
+            - run: vendor/bin/phpstan analyse --no-progress
+            - run: vendor/bin/php-cs-fixer fix --dry-run --diff
+            - run: composer audit

@@ -35,23 +35,23 @@
 
 {% macro columnActions(column, route, datagrid, extraParams = {}) %}
     <div class="column-actions">
-        <i class="fa fa-plus-circle add-column" data-toggle="popover" data-placement="bottom" data-html="true" data-trigger="click" data-content="{% apply spaceless %}
-        {% if datagrid.availableAppendableColumns|length > 0 %}
-        {{ '<div class="pagination-limit">
+        <i class="fa fa-plus-circle add-column" data-toggle="popover" data-placement="bottom" data-html="true" data-trigger="click" data-content="
+        {%- if datagrid.availableAppendableColumns|length > 0 -%}
+        {{- '<div class="pagination-limit">
             <div class="btn-group btn-group-xs m-b-sm">
                 <button class="btn btn-default dropdown-toggle" data-toggle="dropdown">
                     ' ~ ('Insert a column'|trans) ~ ' <span class="caret"></span>
                 </button>
-                <ul class="dropdown-menu">'|escape('html') }}
-                    {% for newColumn, newColumnLabel in datagrid.availableAppendableColumns %}
-                    {{ '<li><a href="' ~ datagrid.newColumnPath(route, newColumn, column, extraParams) ~ '" class="text-sm">' ~ newColumnLabel ~ '</a></li>' }}
-                    {% endfor %}
-                {{ '</ul>
+                <ul class="dropdown-menu">'|escape('html') -}}
+                    {%- for newColumn, newColumnLabel in datagrid.availableAppendableColumns -%}
+                    {{- '<li><a href="' ~ datagrid.newColumnPath(route, newColumn, column, extraParams) ~ '" class="text-sm">' ~ newColumnLabel ~ '</a></li>' -}}
+                    {%- endfor -%}
+                {{- '</ul>
             </div>
-        </div>'|escape('html') }}
-        {% endif %}
-        {{ ('<a class="btn btn-danger btn-xs text-sm btn-block" href="' ~ datagrid.removeColumnPath(route, column, extraParams) ~ '"><i class="fa fa-times"></i> Supprimer la colonne</a>')|escape('html') }}
-        {% endapply %}"></i>
+        </div>'|escape('html') -}}
+        {%- endif -%}
+        {{- ('<a class="btn btn-danger btn-xs text-sm btn-block" href="' ~ datagrid.removeColumnPath(route, column, extraParams) ~ '"><i class="fa fa-times"></i> Supprimer la colonne</a>')|escape('html') -}}
+        "></i>
     </div>
 {% endmacro %}
 
@@ -62,7 +62,7 @@
         data-trigger="manual"
         data-placement="bottom"
         data-html="true"
-        data-content="<i class='close fa fa-times-circle'></i>Les {{ datagrid.pager.results|length }} enregistrements de cette page sont sélectionnés. <a href='#' class='batch-all-globally'>Sélectionner les {{ datagrid.results|length }} enregistrements de la recherche.</a>"
+        data-content="<i class='close fa fa-times-circle'></i>Les {{ datagrid.results.iterator|length }} enregistrements de cette page sont sélectionnés. <a href='#' class='batch-all-globally'>Sélectionner les {{ datagrid.nbResults }} enregistrements de la recherche.</a>"
         {% endif %}
         {% if datagrid.hasAllCheckedBatch %}
             checked="checked"
@@ -78,7 +78,6 @@
         value="{{ identifier }}"
         {% if datagrid.isBatchChecked(identifier) %}
             checked="checked"
-        {% else %}
         {% endif %}
     />
 {% endmacro %}
