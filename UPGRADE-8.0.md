@@ -3,7 +3,7 @@
 ## Requirements
 
 - PHP 8.2+ (unchanged)
-- Symfony **7.4** or 8.x: Symfony 7.0 to 7.3 are no longer supported (end of life).
+- Symfony **6.4**, **7.4** or 8.x: Symfony 7.0 to 7.3 are no longer supported (end of life).
 - Doctrine ORM **2.20+** or 3.x.
 - `phpoffice/phpspreadsheet` 1.23+ when using `AbstractXlsExport` (still optional).
 

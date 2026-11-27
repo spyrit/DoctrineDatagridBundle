@@ -12,7 +12,7 @@ Still skeptical? Let's see how it works!
 ## Requirements
 
 - PHP 8.2+
-- Symfony 7.4 / 8.x
+- Symfony 6.4 / 7.4 / 8.x
 - Doctrine ORM 2.20+ / 3.x
 - `phpoffice/phpspreadsheet` (optional) to export to XLSX
 
