@@ -1,6 +1,7 @@
 /**
- * jQuery Batch Plugin v1.0.0
+ * jQuery Batch Plugin v1.1.0
  * This class provide javascript batch/checkboxes features
+ * No dependency other than jQuery (and Bootstrap popovers).
  * 
  * Copyright 2013, 2014 Maxime CORSON <maxime.corson@spyrit.net>
  * 
@@ -19,6 +20,32 @@
             type: 'include',
             checked: []
         };
+
+        // Same format as the former jquery.cookie plugin (URI-encoded value), so existing cookies stay readable
+        function readCookie(name) {
+            var prefix = encodeURIComponent(name) + '=';
+            var cookies = document.cookie ? document.cookie.split('; ') : [];
+            for (var i = 0; i < cookies.length; i++) {
+                if (cookies[i].indexOf(prefix) === 0) {
+                    try {
+                        return decodeURIComponent(cookies[i].substring(prefix.length).replace(/\+/g, ' '));
+                    } catch (e) {
+                        return null;
+                    }
+                }
+            }
+            return null;
+        }
+
+        function writeCookie(name, value, days) {
+            var expires = new Date();
+            expires.setTime(expires.getTime() + days * 864e5);
+            document.cookie = encodeURIComponent(name) + '=' + encodeURIComponent(value)
+                + '; expires=' + expires.toUTCString()
+                + '; path=/'
+                + '; SameSite=Lax'
+                + (window.location.protocol === 'https:' ? '; Secure' : '');
+        }
         
         return this.each(function() {
             var $this = $(this);
@@ -93,19 +120,20 @@
                     });
                 },
                 getData: function(){
-                    var data = $.cookie(this.name+'_batch');
+                    var data = readCookie(this.name+'_batch');
                     if(!data){
-                        return defaultData;
+                        // copy: the default object must never be mutated
+                        return { type: defaultData.type, checked: [] };
                     }
-                    return JSON.parse(data);
+                    try {
+                        return JSON.parse(data);
+                    } catch (e) {
+                        return { type: defaultData.type, checked: [] };
+                    }
                 },
                 setData: function(data){
-                    $.cookie(
-                        this.name+'_batch', 
-                        JSON.stringify(data), 
-                        { expires: 7, path: '/' }
-                    );
-                },  
+                    writeCookie(this.name+'_batch', JSON.stringify(data), 7);
+                },
                 addChecked: function(value){
                     var data = this.getData();
                     data.checked.push(value);
@@ -172,7 +200,7 @@
                 },
                 updateBatchAllCheckbox: function(){
                     var data = this.getData();
-                    var $checkbox = $this.find(this.batchAllSelector);
+                    var $checkbox = $this.find(this.params.batchAllSelector);
                     
                     if(data.type === 'include'){
                         if(data.checked.length > 0)

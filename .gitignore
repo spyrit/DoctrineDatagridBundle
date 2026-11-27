@@ -24,3 +24,6 @@ catalog.xml
 vendor/
 composer.lock
 /.phpunit.result.cache
+/.phpunit.cache/
+/.php-cs-fixer.cache
+/var/

@@ -1,44 +1,26 @@
-{% apply spaceless %}
-{% set extraParameters = extraParameters|default({}) %}
-{% set display = display|default(2) %}
-{% set page = datagrid.currentPage %}
-{% set pages = datagrid.nbPages %}
+{%- set extraParameters = extraParameters|default({}) -%}
+{%- set display = display|default(2) -%}
+{%- set page = datagrid.currentPage -%}
+{%- set pages = datagrid.nbPages -%}
 
-{% if pages > 1 %}
-{% set available = ['1'] %}
-{% set i = page - display %}
-{% set min = page - display %}
-{% set max = page + display %}
-{% for min in i..max %}
-    {% if(min > 1 and min < pages) %}
-        {% set available = available|merge([min]) %}
-    {% endif %}
-    {% set min = min + 1 %}
-{% endfor %}
+{%- if pages > 1 -%}
+    {%- set available = [1] -%}
+    {%- for candidate in (page - display)..(page + display) -%}
+        {%- if candidate > 1 and candidate < pages -%}
+            {%- set available = available|merge([candidate]) -%}
+        {%- endif -%}
+    {%- endfor -%}
+    {%- set available = available|merge([pages]) -%}
 
-{% set available = available|merge([pages]) %}
-
-<ul class="pagination">
-    {% set next = available[0] %}
-    {% set i = 0 %}
-    {% for currentPage in available %}
-        {% if(next != currentPage) %}
-            <li class="page-item disabled">
-                <a onclick="return false;" href="#" class="page-link">...</a>
-            </li>
-            {% if(available[i+1] is defined) %}{% set next = available[i+1] %}{% endif %}
-        {% else %} 
-            {% set next = next + 1 %} 
-        {% endif %}
-        <li class="page-item {% if(currentPage == page) %}active{% endif %}">
-            <a href="{{ datagrid.getPaginationPath(route, currentPage, extraParameters) }}"
-               title="Page {{ currentPage }}"
-               class="page-link {% if(currentPage == page) %}active{% endif %}">
-                {{ currentPage }}
-            </a>
-        </li>
-        {% set i = i + 1 %}
-    {% endfor %}
-</ul>
-{% endif %}
-{% endapply %}
+    <ul class="pagination">
+    {%- set previous = 0 -%}
+    {%- for currentPage in available -%}
+        {%- if currentPage > previous + 1 -%}
+            <li class="page-item disabled"><a onclick="return false;" href="#" class="page-link">...</a></li>
+        {%- endif -%}
+        {%- set isCurrent = currentPage == page -%}
+        <li class="page-item{{ isCurrent ? ' active' }}"><a href="{{ datagrid.getPaginationPath(route, currentPage, extraParameters) }}" title="Page {{ currentPage }}" class="page-link{{ isCurrent ? ' active' }}">{{ currentPage }}</a></li>
+        {%- set previous = currentPage -%}
+    {%- endfor -%}
+    </ul>
+{%- endif -%}
