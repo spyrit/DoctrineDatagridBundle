@@ -213,6 +213,10 @@ Available options (same as the former *Colibri CSV* library, Excel-friendly defa
 `eol` (`windows`|`unix`|`mac`), `escape` (`\`), `escape_double` (`true`), `bom` (`false`),
 `translit` (`translit`|`ignore`|`null`), `first_row_header` (`false`), `trim` (`false`).
 
+When exported values come from user input, enable `escape_formulas` (`false` by default, to keep the former output):
+values starting with `=`, `+`, `-`, `@`, a tab or a carriage return (numbers excepted) are prefixed with `'`, so that
+spreadsheet software does not evaluate them as formulas ([CSV injection](https://owasp.org/www-community/attacks/CSV_Injection)).
+
 ## Batch actions (JavaScript)
 
 `Resources/public/js/jquery.batch.js` (published with `assets:install`) only requires jQuery

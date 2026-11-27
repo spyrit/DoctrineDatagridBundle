@@ -26,6 +26,7 @@ final class CsvWriter
         'translit' => 'translit',
         'first_row_header' => false,
         'trim' => false,
+        'escape_formulas' => false,
     ];
 
     private const LINE_ENDINGS = [
@@ -55,6 +56,7 @@ final class CsvWriter
     private ?string $translit;
     private bool $firstRowHeader;
     private bool $trim;
+    private bool $escapeFormulas;
 
     private string $content = '';
     private bool $headerWritten = false;
@@ -65,6 +67,7 @@ final class CsvWriter
      *                                      (unix|linux|mac|macos|windows|win or the characters),
      *                                      escape, escape_double, bom, translit (translit|ignore|null),
      *                                      first_row_header, trim. Reader-only options are ignored.
+     *                                      Extra option: escape_formulas, see formatField().
      */
     public function __construct(array $options = [])
     {
@@ -84,6 +87,7 @@ final class CsvWriter
         $this->translit = \in_array($translit, ['translit', 'ignore'], true) ? $translit : null;
         $this->firstRowHeader = (bool) $options['first_row_header'];
         $this->trim = (bool) $options['trim'];
+        $this->escapeFormulas = (bool) $options['escape_formulas'];
 
         if ($options['bom']) {
             $this->content = self::BOMS[$this->encoding] ?? '';
@@ -143,6 +147,12 @@ final class CsvWriter
 
         if ($this->trim) {
             $value = trim($value);
+        }
+
+        // CSV injection (OWASP): a spreadsheet may evaluate a cell starting with one of these
+        // characters as a formula. Numbers ("-12.5") are kept as is.
+        if ($this->escapeFormulas && !is_numeric($value) && 1 === preg_match('/^[=+\-@\t\r]/', $value)) {
+            $value = "'".$value;
         }
 
         $value = str_replace(

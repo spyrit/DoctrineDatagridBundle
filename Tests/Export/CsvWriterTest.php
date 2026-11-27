@@ -63,6 +63,22 @@ final class CsvWriterTest extends TestCase
         $this->assertSame($expected, $writer->getContent());
     }
 
+    public function testFormulasAreKeptByDefault(): void
+    {
+        $writer = new CsvWriter(['encoding' => 'UTF-8', 'eol' => 'unix']);
+        $writer->writeRow(['=1+1', '@SUM(A1)']);
+
+        $this->assertSame("=1+1;@SUM(A1)\n", $writer->getContent());
+    }
+
+    public function testFormulasCanBeEscaped(): void
+    {
+        $writer = new CsvWriter(['encoding' => 'UTF-8', 'eol' => 'unix', 'escape_formulas' => true]);
+        $writer->writeRow(['=HYPERLINK("http://x")', '+1', '-1+2', '@SUM(A1)', "\tx", "\rx", -12.5, '-3', 'a=b', '']);
+
+        $this->assertSame("\"'=HYPERLINK(\"\"http://x\"\")\";+1;'-1+2;'@SUM(A1);'\tx;'\rx;-12.5;-3;a=b;\n", $writer->getContent());
+    }
+
     public function testUnsupportedEncoding(): void
     {
         $this->expectException(\UnexpectedValueException::class);
