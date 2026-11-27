@@ -161,6 +161,21 @@ final class QueryTest extends TestCase
         );
     }
 
+    public function testGetAllResultsWithoutExecuteAppliesGroupBy(): void
+    {
+        $dg = $this->createDatagrid(em: $this->em)
+            ->query(fn (QueryBuilder $qb): QueryBuilder => $qb->from(Book::class, 'b'))
+            ->select(['b.genre', 'COUNT(b.id) AS total'])
+            ->id('b.genre')
+            ->groupBy('b.genre')
+            ->setDefaultSort(['b.genre' => 'ASC']);
+
+        $this->assertEquals(
+            [['genre' => 'essay', 'total' => 3], ['genre' => 'novel', 'total' => 4]],
+            $dg->getAllResults(),
+        );
+    }
+
     public function testUnorderedQueryBuilderIsAClone(): void
     {
         $dg = $this->bookDatagrid();

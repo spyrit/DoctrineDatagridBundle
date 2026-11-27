@@ -570,13 +570,8 @@ class DoctrineDatagrid
     public function export(string $name, array $params = []): mixed
     {
         $class = $this->getExport($name);
-        $this->buildForm();
-        $this->doSort();
-        $this->doFilter();
 
-        $qb = $this->getQueryBuilder()->select(($this->distinct ? 'DISTINCT ' : '').$this->select);
-
-        $export = new $class($qb, $params);
+        $export = new $class($this->createAllResultsQueryBuilder(), $params);
 
         return $export->execute();
     }
@@ -663,6 +658,15 @@ class DoctrineDatagrid
 
     public function getAllResults(): mixed
     {
+        return $this->createAllResultsQueryBuilder()->getQuery()->execute();
+    }
+
+    /**
+     * Query builder of all the results (sorted and filtered, not paginated), whether execute()
+     * has been called before or not.
+     */
+    private function createAllResultsQueryBuilder(): QueryBuilder
+    {
         if (null === $this->filterObject) {
             $this->buildForm();
         }
@@ -675,7 +679,7 @@ class DoctrineDatagrid
             ->setFirstResult(0)
             ->setMaxResults(null);
 
-        return $qb->getQuery()->execute();
+        return $this->groupBy ? $qb->groupBy($this->groupBy) : $qb;
     }
 
     /** Dynamic columns feature here */
