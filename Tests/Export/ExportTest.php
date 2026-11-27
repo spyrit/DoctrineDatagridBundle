@@ -16,8 +16,10 @@ use Spyrit\Bundle\DoctrineDatagridBundle\Tests\Fixtures\Export\BookCsvExport;
 use Spyrit\Bundle\DoctrineDatagridBundle\Tests\Fixtures\Export\BookHtmlExport;
 use Spyrit\Bundle\DoctrineDatagridBundle\Tests\Fixtures\Export\BookOdsExport;
 use Spyrit\Bundle\DoctrineDatagridBundle\Tests\Fixtures\Export\BookXlsExport;
+use Spyrit\Bundle\DoctrineDatagridBundle\Tests\Fixtures\Export\GenreCountCsvExport;
 use Spyrit\Bundle\DoctrineDatagridBundle\Tests\Fixtures\Export\LegacyBookCsvExport;
 use Spyrit\Bundle\DoctrineDatagridBundle\Tests\OrmTestTrait;
+use Symfony\Component\Form\Extension\Core\Type\TextType;
 
 final class ExportTest extends TestCase
 {
@@ -42,6 +44,56 @@ final class ExportTest extends TestCase
         $this->assertSame(
             "Title;Genre\nPolitics and the English Language;essay\nWhy I Write;essay\n",
             $response->getContent(),
+        );
+    }
+
+    public function testExportAfterExecuteExportsAllResultsOnce(): void
+    {
+        $dg = $this->datagrid()
+            // Join done directly in the callback: applying the filter twice would define "a" twice
+            ->filter('author', TextType::class, [], fn (string $author, QueryBuilder $qb): QueryBuilder => $qb
+                ->leftJoin('b.author', 'a')
+                ->andWhere('a.name = :author')
+                ->setParameter('author', $author));
+        $dg->setDefaultMaxPerPage(1);
+        $dg->setDefaultFilters(['author' => 'Orwell']);
+        $dg->execute();
+
+        $this->assertCount(1, iterator_to_array($dg->getResults()));
+        $this->assertSame(
+            "Title;Genre\nPolitics and the English Language;essay\nWhy I Write;essay\n",
+            $dg->export('csv', ['csvWriter' => ['encoding' => 'UTF-8', 'eol' => "\n"]])->getResponse()->getContent(),
+        );
+    }
+
+    /**
+     * @return iterable<string, array{bool}>
+     */
+    public static function executedBefore(): iterable
+    {
+        yield 'without execute()' => [false];
+        yield 'after execute()' => [true];
+    }
+
+    #[DataProvider('executedBefore')]
+    public function testGroupByIsAppliedToTheExport(bool $executedBefore): void
+    {
+        $dg = $this->createDatagrid(em: $this->em)
+            ->query(fn (QueryBuilder $qb): QueryBuilder => $qb->from(Book::class, 'b'))
+            ->select(['b.genre', 'COUNT(b.id) AS total'])
+            ->id('b.genre')
+            ->groupBy('b.genre')
+            ->shouldFetchJoinCollection(false)
+            ->setDefaultSort(['b.genre' => 'ASC'])
+            ->setExports(['csv' => GenreCountCsvExport::class]);
+        if ($executedBefore) {
+            $dg->setDefaultMaxPerPage(1);
+            $dg->execute();
+        }
+
+        $this->assertSame(
+            "Genre;Total\nessay;3\nnovel;4\n",
+            $dg->export('csv', ['csvWriter' => ['encoding' => 'UTF-8', 'eol' => "\n"]])->getResponse()->getContent(),
         );
     }
 
