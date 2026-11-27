@@ -113,6 +113,22 @@ final class QueryTest extends TestCase
         $this->assertCount(4, $dg->getAllResults());
     }
 
+    public function testGetAllResultsAfterExecuteDoesNotReapplySortAndFilters(): void
+    {
+        $request = Request::create('/', 'POST', ['filter_dg' => ['author' => 'Asimov']]);
+        $dg = $this->bookDatagrid($request)
+            // Join done directly in the callback: applying the filter twice would define "a" twice
+            ->filter('author', TextType::class, [], fn (string $author, QueryBuilder $qb): QueryBuilder => $qb
+                ->leftJoin('b.author', 'a')
+                ->andWhere('a.name = :author')
+                ->setParameter('author', $author));
+        $dg->setDefaultMaxPerPage(2);
+        $dg->execute();
+
+        $this->assertSame(['Foundation', 'I, Robot', 'The End of Eternity'], $this->titles($dg->getAllResults()));
+        $this->assertCount(1, $dg->getQueryBuilder()->getDQLPart('orderBy'));
+    }
+
     public function testGetAllResultsWithoutExecuteAppliesFilters(): void
     {
         // Filter submitted on a previous request, then e.g. an export action calling getAllResults() directly

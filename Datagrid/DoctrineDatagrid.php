@@ -95,6 +95,11 @@ class DoctrineDatagrid
     protected Paginator $results;
 
     /**
+     * Whether the sorts and the filters have already been applied to the query builder.
+     */
+    private bool $sortedAndFiltered = false;
+
+    /**
      * Number of result(s) to display per page.
      */
     protected int $maxPerPage;
@@ -197,8 +202,7 @@ class DoctrineDatagrid
                     break;
             }
         }
-        $this->doSort();
-        $this->doFilter();
+        $this->sortAndFilter();
         $this->results = $this->getQueryResults();
     }
 
@@ -484,6 +488,21 @@ class DoctrineDatagrid
         return $this;
     }
 
+    /**
+     * Applies the sorts and the filters only once: getAllResults() may be called after execute(),
+     * and a filter joining a relation directly would fail if applied twice.
+     */
+    private function sortAndFilter(): void
+    {
+        if ($this->sortedAndFiltered) {
+            return;
+        }
+
+        $this->doSort();
+        $this->doFilter();
+        $this->sortedAndFiltered = true;
+    }
+
     protected function doSort(): void
     {
         $sort = $this->getSessionValue('sort', $this->defaultSorts);
@@ -638,8 +657,7 @@ class DoctrineDatagrid
             $this->buildForm();
         }
 
-        $this->doSort();
-        $this->doFilter();
+        $this->sortAndFilter();
 
         // The query builder may already be paginated if execute() has been called before
         $qb = (clone $this->getQueryBuilder())
