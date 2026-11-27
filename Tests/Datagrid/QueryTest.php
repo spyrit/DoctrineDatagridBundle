@@ -48,6 +48,12 @@ final class QueryTest extends TestCase
         $this->assertSame(3, $dg->getNbPages());
         // 1984, A Nice Cup of Tea, Foundation | I, Robot, Politics…, The End of Eternity | Why I Write
         $this->assertSame(['Why I Write'], $this->titles($dg->getResults()));
+        $this->assertSame(1, $dg->getNbResultsOnPage());
+
+        $dg->setCurrentPage(2);
+        $this->assertSame(3, $dg->getNbResultsOnPage());
+        $dg->setCurrentPage(4);
+        $this->assertSame(0, $dg->getNbResultsOnPage(), 'Page out of range');
     }
 
     public function testPageActionUpdatesCurrentPage(): void

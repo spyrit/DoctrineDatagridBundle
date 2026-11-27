@@ -62,7 +62,7 @@
         data-trigger="manual"
         data-placement="bottom"
         data-html="true"
-        data-content="<i class='close fa fa-times-circle'></i>Les {{ datagrid.results.iterator|length }} enregistrements de cette page sont sélectionnés. <a href='#' class='batch-all-globally'>Sélectionner les {{ datagrid.nbResults }} enregistrements de la recherche.</a>"
+        data-content="<i class='close fa fa-times-circle'></i>Les {{ datagrid.nbResultsOnPage }} enregistrements de cette page sont sélectionnés. <a href='#' class='batch-all-globally'>Sélectionner les {{ datagrid.nbResults }} enregistrements de la recherche.</a>"
         {% endif %}
         {% if datagrid.hasAllCheckedBatch %}
             checked="checked"

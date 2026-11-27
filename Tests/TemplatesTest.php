@@ -65,6 +65,25 @@ final class TemplatesTest extends TestCase
         $this->assertSame($expected, $this->summarize($html));
     }
 
+    public function testBatchHeaderDoesNotIterateTheResults(): void
+    {
+        $datagrid = new class {
+            public int $nbResultsOnPage = 15;
+            public int $nbResults = 42;
+
+            public function hasAllCheckedBatch(): bool
+            {
+                return false;
+            }
+        };
+
+        $twig = $this->createTwig();
+        $html = $twig->createTemplate('{% import "Datagrid/macros.html.twig" as m %}{{ m.batchHeader(datagrid, true) }}')->render(['datagrid' => $datagrid]);
+
+        $this->assertStringContainsString('Les 15 enregistrements de cette page', $html);
+        $this->assertStringContainsString('Sélectionner les 42 enregistrements', $html);
+    }
+
     private function summarize(string $html): string
     {
         preg_match_all('#<li class="page-item( active| disabled)?"><a[^>]*>([^<]+)</a></li>#', $html, $matches, \PREG_SET_ORDER);

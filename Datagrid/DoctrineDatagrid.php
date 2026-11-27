@@ -651,6 +651,16 @@ class DoctrineDatagrid
         return $this->nbPages;
     }
 
+    /**
+     * Number of results on the current page, computed without running the query again.
+     */
+    public function getNbResultsOnPage(): int
+    {
+        $maxPerPage = $this->getMaxPerPage();
+
+        return max(0, min($maxPerPage, $this->nbResults - ($this->getCurrentPage() - 1) * $maxPerPage));
+    }
+
     public function getAllResults(): mixed
     {
         if (null === $this->filterObject) {
